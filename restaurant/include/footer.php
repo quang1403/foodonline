@@ -1,0 +1,1 @@
+ <footer class="footer" style="text-align: center;">DelishHub-Đồ ăn nhanh HQ © 2025 
