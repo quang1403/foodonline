@@ -14,38 +14,35 @@ function function_alert() {
     echo "<script>window.location.replace('your_orders.php');</script>"; 
 } 
 
-if(empty($_SESSION["user_id"]))
-{
-	header('location:login.php');
-}
-else{
+if(empty($_SESSION["user_id"])) {
+    header('location:login.php');
+} else {
+    foreach ($_SESSION["cart_item"] as $item) {
+        $item_total += ($item["price"] * $item["quantity"]);
 
-										  
-    foreach ($_SESSION["cart_item"] as $item)
-    {
+        if($_POST['submit']) {
+            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price) 
+                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."')";
 
-    $item_total += ($item["price"]*$item["quantity"]);
-    
-        if($_POST['submit'])
-        {
+            mysqli_query($db, $SQL);
 
-        $SQL="insert into users_orders(u_id,title,quantity,price) values('".$_SESSION["user_id"]."','".$item["title"]."','".$item["quantity"]."','".$item["price"]."')";
+            // Cập nhật rs_id sau khi đặt hàng thành công
+            $update_rs_id = "UPDATE users_orders uo 
+                             JOIN dishes d ON uo.title = d.title
+                             SET uo.rs_id = d.rs_id
+                             WHERE uo.rs_id = 0"; 
 
-            mysqli_query($db,$SQL);
-            
-            
+            mysqli_query($db, $update_rs_id);
+
             unset($_SESSION["cart_item"]);
             unset($item["title"]);
             unset($item["quantity"]);
             unset($item["price"]);
-            $success = "Thành công, vui lòng chờ xử lý!";
 
             function_alert();
-
-            
-            
         }
     }
+}
 ?>
 
 
@@ -234,5 +231,5 @@ else{
 </html>
 
 <?php
-}
+
 ?>
