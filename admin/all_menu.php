@@ -43,10 +43,6 @@ session_start();
 
                                     <ul class="navbar-nav mr-auto mt-md-0">
 
-
-                        
-
-
                                     </ul>
 
                                     <ul class="navbar-nav my-lg-0">
@@ -58,11 +54,11 @@ session_start();
                                             <div class="dropdown-menu dropdown-menu-right mailbox animated zoomIn">
                                                 <ul>
                                                     <li>
-                                                        <div class="drop-title">Notifications</div>
+                                                        <div class="drop-title">Thông báo</div>
                                                     </li>
 
                                                     <li>
-                                                        <a class="nav-link text-center" href="javascript:void(0);"> <strong>Check all notifications</strong> <i class="fa fa-angle-right"></i> </a>
+                                                        <a class="nav-link text-center" href="javascript:void(0);"> <strong>Kiểm tra tất cả thông báo</strong> <i class="fa fa-angle-right"></i> </a>
                                                     </li>
                                                 </ul>
                                             </div>
@@ -143,12 +139,12 @@ session_start();
                                 <table id="example23" class="display nowrap table table-hover table-striped table-bordered" cellspacing="0" width="100%">
                                     <thead class="thead-dark">
                                         <tr>
-                                            <th>Restaurant</th>
-                                            <th>Dish</th>
-                                            <th>Description</th>
-                                            <th>Price</th>
-                                            <th>Image</th>
-                                            <th>Action</th>
+                                            <th>Nhà hàng</th>
+                                            <th>Món ăn</th>
+                                            <th>Mô tả</th>
+                                            <th>Giá</th>
+                                            <th>HÌnh ảnh</th>
+                                            <th>Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -176,7 +172,7 @@ session_start();
                                                         
                                                                     <td>'.$rows['title'].'</td>
                                                                     <td>'.$rows['slogan'].'</td>
-                                                                    <td>$'.$rows['price'].'</td>
+                                                                    <td>'.$rows['price'].'VND</td>
                                                                     
                                                                     
                                                                     <td><div class="col-md-3 col-lg-8 m-b-10">

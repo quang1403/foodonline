@@ -139,7 +139,7 @@ session_start();
                                         <div class="col-lg-12">
                                             <div class="card card-outline-primary">
                                                 <div class="card-header">
-                                                    <h4 class="m-b-0 text-white">All Users</h4>
+                                                    <h4 class="m-b-0 text-white">Tất cả người dùng</h4>
                                                 </div>
 
                                                 <div class="table-responsive m-t-40">
@@ -150,10 +150,10 @@ session_start();
                                                                 <th>FirstName</th>
                                                                 <th>LastName</th>
                                                                 <th>Email</th>
-                                                                <th>Phone</th>
-                                                                <th>Address</th>
-                                                                <th>Reg-Date</th>
-                                                                <th>Action</th>
+                                                                <th>Điện thoại</th>
+                                                                <th>Địa chỉ</th>
+                                                                <th>Ngày tham gia</th>
+                                                                <th>Hành động</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>

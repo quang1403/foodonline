@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <?php
@@ -7,14 +6,10 @@ error_reporting(0);
 session_start();
 ?>
 
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="#">
     <title>Restaurants</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
@@ -62,64 +57,93 @@ session_start();
         top: 50%;
         transform: translateY(-50%);
     }
+    .filter-form {
+        margin-top: 20px;
+    }
 </style>
 
-    <div class="page-wrapper">
-        <div class="top-links">
-            <div class="container">
-                <ul class="row links">
-
-                    <li class="col-xs-12 col-sm-4 link-item active"><span>1</span><a href="#">Lựa chọn nhà hàng</a></li>
-                    <li class="col-xs-12 col-sm-4 link-item"><span>2</span><a href="#">Lựa chọn món ăn yêu thích</a></li>
-                    <li class="col-xs-12 col-sm-4 link-item"><span>3</span><a href="#">Xác nhận & Thanh toán</a></li>
-                </ul>
-            </div>
+<div class="page-wrapper">
+    <div class="top-links">
+        <div class="container">
+            <ul class="row links">
+                <li class="col-xs-12 col-sm-4 link-item active"><span>1</span><a href="#">Lựa chọn nhà hàng</a></li>
+                <li class="col-xs-12 col-sm-4 link-item"><span>2</span><a href="#">Lựa chọn món ăn yêu thích</a></li>
+                <li class="col-xs-12 col-sm-4 link-item"><span>3</span><a href="#">Xác nhận & Thanh toán</a></li>
+            </ul>
         </div>
-        <div class="inner-page-hero bg-image" data-image-src="images/img/pimg.jpg">
-            <div class="container"> </div>
-        </div>
-        <div class="result-show">
-            <div class="container">
-                <div class="row">
-                </div>
-            </div>
-        </div>
-        
-
-        <section class="restaurants-page">
-            <div class="container">
-                <div class="row">
-                    <div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
-                    </div>
-                    <div class="col-xs-12 col-sm-7 col-md-7 col-lg-9">
-                        <div class="bg-gray restaurant-entry">
-                            <div class="row">
-                                <?php $ress= mysqli_query($db,"select * from restaurant");
-									      while($rows=mysqli_fetch_array($ress)) {
-                                            echo '<div class="restaurant-item col-sm-12 col-md-12 col-lg-8 text-xs-center text-sm-left">
-                                                    <div class="entry-logo">
-                                                        <a class="img-fluid" href="dishes.php?res_id='.$rows['rs_id'].'" > 
-                                                            <img src="admin/Res_img/'.$rows['image'].'" alt="Food logo">
-                                                        </a>
-                                                    </div>
-                                                    <div class="entry-dscr">
-                                                        <h5><a href="dishes.php?res_id='.$rows['rs_id'].'" >'.$rows['title'].'</a></h5> 
-                                                        <span>'.$rows['address'].'</span>
-                                                    </div>
-                                                </div>';
-                                        }						
-						?>
-
-                            </div>
-
-                        </div>
-
-
-
-                    </div>
-             </div>
-            </div>
     </div>
+
+    <div class="inner-page-hero bg-image" data-image-src="images/img/pimg.jpg">
+        <div class="container"></div>
+    </div>
+
+    <div class="result-show">
+        <div class="container">
+            <div class="row"></div>
+        </div>
+    </div>
+
+    <section class="restaurants-page">
+        <div class="container">
+            <div class="row">
+
+                <!-- Bộ lọc khu vực -->
+                <div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
+                    <form method="GET" class="filter-form">
+                        <h5><strong>Lọc theo khu vực</strong></h5>
+                        <div class="form-group">
+                            <select name="district" class="form-control">
+                                <option value="">-- Tất cả --</option>
+                                <?php
+                                $areas = mysqli_query($db, "SELECT DISTINCT district FROM restaurant ORDER BY district ASC");
+                                while ($area = mysqli_fetch_assoc($areas)) {
+                                    $selected = (isset($_GET['district']) && $_GET['district'] == $area['district']) ? 'selected' : '';
+                                    echo "<option value='".$area['district']."' $selected>".$area['district']."</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
+                    </form>
+                </div>
+
+                <!-- Danh sách nhà hàng -->
+                <div class="col-xs-12 col-sm-7 col-md-7 col-lg-9">
+                    <div class="bg-gray restaurant-entry">
+                        <div class="row">
+                            <?php
+                            $where = " WHERE 1=1 ";
+                            if (!empty($_GET['district'])) {
+                                $district = mysqli_real_escape_string($db, $_GET['district']);
+                                $where .= " AND district = '$district' ";
+                            }
+
+                            $ress = mysqli_query($db, "SELECT * FROM restaurant $where");
+                            if (mysqli_num_rows($ress) > 0) {
+                                while ($rows = mysqli_fetch_array($ress)) {
+                                    echo '
+                                    <div class="restaurant-item col-sm-12 col-md-12 col-lg-8 text-xs-center text-sm-left">
+                                        <div class="entry-logo">
+                                            <a class="img-fluid" href="dishes.php?res_id='.$rows['rs_id'].'" > 
+                                                <img src="admin/Res_img/'.$rows['image'].'" alt="Food logo">
+                                            </a>
+                                        </div>
+                                        <div class="entry-dscr">
+                                            <h5><a href="dishes.php?res_id='.$rows['rs_id'].'" >'.$rows['title'].'</a></h5> 
+                                            <span>'.$rows['address'].'</span>
+                                        </div>
+                                    </div>';
+                                }
+                            } else {
+                                echo '<div class="col-md-12"><p>Không tìm thấy nhà hàng nào.</p></div>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </section>
 
     <?php include "include/footer.php" ?>
@@ -136,19 +160,17 @@ session_start();
         $(document).ready(function() {
             $('#searchButton').on('click', function() {
                 $('#searchInput').toggleClass('d-none').focus();
-        });
+            });
 
-        $('#searchInput').on('keyup', function() {
-            var value = $(this).val().toLowerCase();
-            $('.restaurant-item').each(function() {
-                var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
-                $(this).toggle(title.indexOf(value) > -1);
+            $('#searchInput').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $('.restaurant-item').each(function() {
+                    var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
+                    $(this).toggle(title.indexOf(value) > -1);
+                });
             });
         });
-    });
-
     </script>
+
 </body>
-
-
 </html>
