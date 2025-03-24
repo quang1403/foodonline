@@ -211,12 +211,12 @@ td, th {
                                     <thead style="background: #404040; color:white;">
                                         <tr>
 
-                                            <th>Item</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                            <th>Action</th>
+                                            <th>Món ăn</th>
+                                            <th>Số lượng</th>
+                                            <th>Giá</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thời gian</th>
+                                            <th>Hành động</th>
 
                                         </tr>
                                     </thead>
@@ -240,7 +240,7 @@ td, th {
                                         <tr>
                                             <td data-column="Item"> <?php echo $row['title']; ?></td>
                                             <td data-column="Quantity"> <?php echo $row['quantity']; ?></td>
-                                            <td data-column="price">$<?php echo $row['price']; ?></td>
+                                            <td data-column="price"><?php echo $row['price']; ?>VND</td>
                                             <td data-column="status">
                                                 <?php 
 																			$status=$row['status'];

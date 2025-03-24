@@ -213,7 +213,7 @@ session_start();
                     <div class="restaurants-filter pull-right">
                         <nav class="primary pull-left">
                             <ul>
-                                <li><a href="#" class="selected" data-filter="*">all</a> </li>
+                                <li><a href="#" class="selected" data-filter="*">All</a> </li>
                                 <?php 
 									$res= mysqli_query($db,"select * from res_category");
 									      while($row=mysqli_fetch_array($res))

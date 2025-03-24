@@ -192,10 +192,6 @@ if(isset($_POST['submit']))           //if upload btn is pressed
             <div style="padding-top: 10px;">
                 <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="#">ONLINE FOOD HQ</a> - HỌC VIỆN QUẢN LÝ GIÁO DỤC.</marquee>
             </div>
-
-            
-
-
                             <div class="container-fluid">
 
 
@@ -255,14 +251,6 @@ if(isset($_POST['submit']))           //if upload btn is pressed
 
 
                                                     <div class="row">
-
-
-
-                                        
-
-
-
-
                                                         <div class="col-md-12">
                                                             <div class="form-group">
                                                                 <label class="control-label">Select Category</label>

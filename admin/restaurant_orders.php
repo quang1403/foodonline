@@ -184,10 +184,34 @@ if(!$restaurant) {
     <script src="js/lib/datatables/cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
     <script src="js/lib/datatables/cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js"></script>
     <script src="js/lib/datatables/cdn.datatables.net/buttons/1.2.2/js/buttons.print.min.js"></script>
-    <script>
+    <!-- <script>
         $(document).ready(function() {
             $('#myTable').DataTable();
         });
+    </script> -->
+
+    <!-- ----- Xuất excel và print bill -->
+    <script>
+        $(document).ready(function() {
+    $('#myTable').DataTable({
+        dom: 'Bfrtip',  // Thêm phần nút export vào DOM
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                text: 'Xuất Excel',
+                title: 'Danh sách đơn hàng - <?php echo $restaurant['title']; ?>'
+            },
+            {
+                extend: 'print',
+                text: 'In danh sách'
+            }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json'
+        }
+    });
+});
+
     </script>
 </body>
 </html>
