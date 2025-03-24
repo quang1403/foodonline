@@ -83,13 +83,6 @@ function f3() {
                         color: #777;
                     }
 
-
-
-
-
-
-
-
                     table {
                         width: 650px;
                         border-collapse: collapse;
@@ -124,10 +117,6 @@ function f3() {
 
                     <div style="margin-left:50px;">
                         <form name="updateticket" id="updatecomplaint" method="post">
-
-
-
-
                             <table border="0" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td><b>ID đơn hàng</b></td>
@@ -167,14 +156,6 @@ function f3() {
                                         <input name="Submit2" type="submit" class="btn btn-danger" value="Đóng" onClick="return f2();" style="cursor: pointer;" />
                                     </td>
                                 </tr>
-
-
-
-                
-
-
-
-
 
                             </table>
                         </form>
