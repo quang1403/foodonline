@@ -138,18 +138,19 @@ if(empty($_SESSION["user_id"])) {
 
                                                        
 
-                                                        <tr>
-                                                            <td>Tổng tiền giỏ hàng</td>
-                                                            <td> <?php echo $item_total."VND"; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Phí vận chuyển</td>
-                                                            <td>Miễn phí</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="text-color"><strong>Tổng</strong></td>
-                                                            <td class="text-color"><strong> <?php echo $item_total."VND"; ?></strong></td>
-                                                        </tr>
+                                                    <tr>
+    <td>Tổng tiền giỏ hàng</td>
+    <td><?php echo number_format($item_total, 0, ',', '.') . " VND"; ?></td>
+</tr>
+<tr>
+    <td>Phí vận chuyển</td>
+    <td>Miễn phí</td>
+</tr>
+<tr>
+    <td class="text-color"><strong>Tổng</strong></td>
+    <td class="text-color"><strong><?php echo number_format($item_total, 0, ',', '.') . " VND"; ?></strong></td>
+</tr>
+
                                                     </tbody>
 
                                                    
