@@ -167,30 +167,49 @@ if(empty($_SESSION["user_id"])) {
                                                 </li>
                                                 <li>
     <label class="custom-control custom-radio m-b-10">
-        <input name="mod" type="radio" value="qr" class="custom-control-input" onclick="toggleQR('qr')"> 
+        <input name="mod" type="radio" value="qr" class="custom-control-input" id="qrRadio"> 
         <span class="custom-control-indicator"></span> 
-        <span class="custom-control-description">Pay via QR Code</span>
+        <span class="custom-control-description">Thanh toán bằng QR Code</span>
     </label>
 </li>
 
-<div id="qrPayment" style="display: none; text-align: center;">
+<!-- Phần hiển thị QR Code -->
+<div id="qrPaymentSection" style="display: none; text-align: center;">
     <p>Quét mã QR để thanh toán:</p>
-    <img src="generate_qr.php" alt="QR Code for Payment" width="200">
+    <div id="qrImageContainer">
+        <img id="qrCodeImage" src="" alt="QR Code for Payment" width="250">
+    </div>
+    <p>Số tiền thanh toán: <strong><?php echo number_format($item_total, 0, ',', '.'); ?> VND</strong></p>
 </div>
 
 <script>
-    document.querySelectorAll('input[name="mod"]').forEach((radio) => {
-            radio.addEventListener('change', function() {
-                // Lấy div chứa QR
-                const qrPaymentDiv = document.getElementById('qrPayment');
-                
-                // Nếu radio QR được chọn thì hiển thị, ngược lại ẩn đi
-                qrPaymentDiv.style.display = 
-                    this.value === 'qr' ? 'block' : 'none';
-            });
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const qrRadio = document.getElementById('qrRadio');
+    const qrPaymentSection = document.getElementById('qrPaymentSection');
+    const qrCodeImage = document.getElementById('qrCodeImage');
+
+    qrRadio.addEventListener('change', function() {
+        if (this.checked) {
+            const totalAmount = "<?php echo $item_total; ?>";
+            fetch(`generate_qr.php?total=${totalAmount}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.qr_path) {
+                        qrCodeImage.src = data.qr_path;
+                        qrPaymentSection.style.display = 'block';
+                    } else {
+                        console.error("Lỗi tạo QR:", data.error);
+                    }
+                })
+                .catch(error => console.error("Lỗi khi fetch QR:", error));
+        }
+    });
+});
+
 </script>
-                                                </li>
+
+
+                                  </li>
                                             </ul>
                                             <p class="text-xs-center"> <input type="submit" onclick="return confirm('Xác nhận thanh toán?');" name="submit" class="btn btn-success btn-block" value="Thanh toán"> </p>
                                         </div>
