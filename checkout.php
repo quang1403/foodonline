@@ -185,11 +185,12 @@ if(empty($_SESSION["user_id"])) {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const qrRadio = document.getElementById('qrRadio');
+    const codRadio = document.getElementById('radioStacked1'); // Input của COD
     const qrPaymentSection = document.getElementById('qrPaymentSection');
     const qrCodeImage = document.getElementById('qrCodeImage');
 
-    qrRadio.addEventListener('change', function() {
-        if (this.checked) {
+    function toggleQRSection() {
+        if (qrRadio.checked) {
             const totalAmount = "<?php echo $item_total; ?>";
             fetch(`generate_qr.php?total=${totalAmount}`)
                 .then(response => response.json())
@@ -202,8 +203,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(error => console.error("Lỗi khi fetch QR:", error));
+        } else {
+            qrPaymentSection.style.display = 'none'; // Ẩn QR khi chọn COD
         }
-    });
+    }
+
+    // Gọi hàm khi radio button thay đổi
+    qrRadio.addEventListener('change', toggleQRSection);
+    codRadio.addEventListener('change', toggleQRSection);
+
+    // Kiểm tra trạng thái ban đầu
+    toggleQRSection();
 });
 
 </script>
