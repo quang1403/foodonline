@@ -1,6 +1,6 @@
 import os
 import sys
-import qrcode
+import qrcode   
 
 # Lấy số tiền từ tham số dòng lệnh
 if len(sys.argv) > 1 and sys.argv[1].strip():

@@ -9,7 +9,7 @@ if (!$amount) {
 }
 
 // Đường dẫn tới Python (cập nhật theo máy của bạn)
-$pythonPath = "c:\\Users\\ASUS\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
+$pythonPath = "C:\Users\Hi Windows 11 Home\AppData\Local\Programs\Python\Python313\python.exe";
 $scriptPath = __DIR__ . "/generate_qr.py";
 
 // Chạy script Python
