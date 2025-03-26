@@ -170,7 +170,7 @@ session_start();
 												
 													if(!mysqli_num_rows($query) > 0 )
 														{
-															echo '<td colspan="8"><center>No Orders</center></td>';
+															echo '<td colspan="8"><center>Không có đơn hàng!</center></td>';
 														}
 													else
 														{				
@@ -183,7 +183,7 @@ session_start();
 																					           <td>'.$rows['username'].'</td>
 																								<td>'.$rows['title'].'</td>
 																								<td>'.$rows['quantity'].'</td>
-																								<td>$'.$rows['price'].'</td>
+																								<td>'. number_format($rows['price'], 0, ',', '.') . 'VND</td>
 																								<td>'.$rows['address'].'</td>';
 																								?>
                                                             <?php 
@@ -191,12 +191,12 @@ session_start();
 																			if($status=="" or $status=="NULL")
 																			{
 																			?>
-                                                            <td> <button type="button" class="btn btn-info"><span class="fa fa-bars" aria-hidden="true"></span> Đang chuẩn bị</button></td>
+                                                            <td> <button type="button" class="btn btn-info"><span class="fa fa-clock" aria-hidden="true"></span> Chờ xác nhận</button></td>
                                                             <?php 
 																			  }
 																			   if($status=="in process")
 																			 { ?>
-                                                            <td> <button type="button" class="btn btn-warning"><span class="fa fa-cog fa-spin" aria-hidden="true"></span> Đang trên đường giao!</button></td>
+                                                            <td> <button type="button" class="btn btn-warning"><span class="fa fa-motorcycle" aria-hidden="true"></span> Đang trên đường giao!</button></td>
                                                             <?php
 																				}
 																			if($status=="closed")
@@ -214,6 +214,23 @@ session_start();
                                                             <?php 
 																			} 
 																			?>
+                                                                            <?php
+																			if($status=="preparing")
+																				{
+																			?>
+                                                            <td> <button type="button" class="btn btn-danger"> <i class="fa fa-hourglass-half"></i> Đang chuẩn bị</button></td>
+                                                            <?php 
+																			} 
+																			?>
+                                                                            <?php
+																			if($status=="prepared")
+																				{
+																			?>
+                                                            <td> <button type="button" class="btn btn-danger"> <i class="fa fa-check"></i> Đã chuẩn bị</button></td>
+                                                            <?php 
+																			} 
+																			?>
+                                                                            
                                                             <?php																									
 																							echo '	<td>'.$rows['date'].'</td>';
 																							?>

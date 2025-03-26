@@ -133,8 +133,10 @@ function f3() {
                                     <td><select name="status" required="required">
                                             <option value="">Lựa chọn trạng thái</option>
                                             <option value="in process">Đang trên đường giao</option>
-                                            <option value="closed">Đã giao</option>
+                                            <option value="preparing">Đang chuẩn bị</option>
+                                            <option value="prepared">Đã chuẩn bị</option>
                                             <option value="rejected">Đã hủy</option>
+                                            <option value="closed">Đã giao</option>
 
                                         </select></td>
                                 </tr>

@@ -228,7 +228,7 @@ td, th {
 						$query_res= mysqli_query($db,"select * from users_orders where u_id='".$_SESSION['user_id']."'");
 												if(!mysqli_num_rows($query_res) > 0 )
 														{
-															echo '<td colspan="6"><center>You have No orders Placed yet. </center></td>';
+															echo '<td colspan="6"><center>Không có đơn hàng nào. </center></td>';
 														}
 													else
 														{			      
@@ -242,39 +242,42 @@ td, th {
                                             <td data-column="Quantity"> <?php echo $row['quantity']; ?></td>
                                             <td data-column="price"><?php echo $row['price']; ?>VND</td>
                                             <td data-column="status">
+                                                
+                                            <?php 
+                                                $status=$row['status'];
+                                                if($status=="" or $status=="NULL") {
+                                                ?>
+                                                    <button type="button" class="btn btn-secondary">
+                                                        <span class="fa fa-clock" aria-hidden="true"></span> Chờ xác nhận
+                                                    </button>
                                                 <?php 
-																			$status=$row['status'];
-																			if($status=="" or $status=="NULL")
-																			{
-																			?>
-                                                <button type="button" class="btn btn-info"><span class="fa fa-bars" aria-hidden="true"></span> Đang chuẩn bị</button>
-                                                <?php 
-																			  }
-																			   if($status=="in process")
-																			 { ?>
-                                                <button type="button" class="btn btn-warning"><span class="fa fa-cog fa-spin" aria-hidden="true"></span> Đang trên đường giao!</button>
-                                                <?php
-																				}
-																			if($status=="closed")
-																				{
-																			?>
-                                                <button type="button" class="btn btn-success"><span class="fa fa-check-circle" aria-hidden="true"></span> Đã giao</button>
-                                                <?php 
-																			} 
-																			?>
-                                                <?php
-																			if($status=="rejected")
-																				{
-																			?>
-                                                <button type="button" class="btn btn-danger"> <i class="fa fa-close"></i> Đã hủy</button>
-                                                <?php 
-																			} 
-																			?>
-
-
-
-
-
+                                                }
+                                                if($status=="preparing") { ?>
+                                                    <button type="button" class="btn btn-info">
+                                                        <span class="fa fa-hourglass-half" aria-hidden="true"></span> Đang chuẩn bị
+                                                    </button>
+                                                <?php }
+                                                if($status=="prepared") { ?>
+                                                    <button type="button" class="btn btn-primary">
+                                                        <span class="fa fa-check" aria-hidden="true"></span> Đã chuẩn bị
+                                                    </button>
+                                                <?php }
+                                                if($status=="in process") { ?>
+                                                    <button type="button" class="btn btn-warning">
+                                                        <span class="fa fa-motorcycle" aria-hidden="true"></span> Đang trên đường giao!
+                                                    </button>
+                                                <?php }
+                                                if($status=="closed") { ?>
+                                                    <button type="button" class="btn btn-success">
+                                                        <span class="fa fa-check-circle" aria-hidden="true"></span> Đã giao
+                                                    </button>
+                                                <?php }
+                                                if($status=="rejected") { ?>
+                                                    <button type="button" class="btn btn-danger">
+                                                        <i class="fa fa-close"></i> Đã hủy
+                                                    </button>
+                                                <?php } 
+                                            ?>
 
                                             </td>
                                             <td data-column="Date"> <?php echo $row['date']; ?></td>

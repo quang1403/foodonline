@@ -235,14 +235,30 @@ session_start();
 																			{
 																			?>
                                                                 <td>
-                                                                    <center><button type="button" class="btn btn-info"><span class="fa fa-bars" aria-hidden="true"></span> Dispatch</button></center>
+                                                                    <center><button type="button" class="btn btn-info"><span class="fa fa-clock" aria-hidden="true"></span> Chờ xác nhận</button></center>
+                                                                </td>
+                                                                <?php
+																				}
+																			if($status=="preparing")
+																				{
+																			?>
+                                                                <td>
+                                                                    <center><button type="button" class="btn btn-primary"><span class="fa fa-hourglass-half" aria-hidden="true"></span> Đang chuẩn bị</button></center>
+                                                                </td>
+                                                                <?php
+																				}
+																			if($status=="prepared")
+																				{
+																			?>
+                                                                <td>
+                                                                    <center><button type="button" class="btn btn-primary"><span class="fa fa-check" aria-hidden="true"></span> Đã chuẩn bị</button></center>
                                                                 </td>
                                                                 <?php 
 																			  }
 																			   if($status=="in process")
 																			 { ?>
                                                                 <td>
-                                                                    <center><button type="button" class="btn btn-warning"><span class="fa fa-cog fa-spin" aria-hidden="true"></span>Đang trên đường giao</button></center>
+                                                                    <center><button type="button" class="btn btn-warning"><span class="fa fa-motorcycle" aria-hidden="true"></span>Đang trên đường giao</button></center>
                                                                 </td>
                                                                 <?php
 																				}
