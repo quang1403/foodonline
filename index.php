@@ -118,27 +118,26 @@ session_start();
                 <p class="lead">"Top món bán chạy – Không thử sao biết?"</p>
             </div>
             <div class="row">
-                
+    <?php 					
+        $query_res = mysqli_query($db, "SELECT * FROM dishes LIMIT 6"); 
+        while ($r = mysqli_fetch_array($query_res)) {
+            echo '<div class="col-xs-12 col-sm-6 col-md-4 food-item">
+                    <div class="food-item-wrap">
+                        <div class="figure-wrap bg-image" data-image-src="admin/Res_img/dishes/' . $r['img'] . '"></div>
+                        <div class="content">
+                            <h5><a href="dishes.php?res_id=' . $r['rs_id'] . '">' . $r['title'] . '</a></h5>
+                            <div class="product-name">' . $r['slogan'] . '</div>
+                            <div class="price-btn-block"> 
+                                <span class="price">' . number_format($r['price'], 0, ',', '.') . ' VND</span> 
+                                <a href="dishes.php?res_id=' . $r['rs_id'] . '" class="btn theme-btn-dash pull-right">Mua ngay</a> 
+                            </div>
+                        </div>
+                    </div>
+                </div>';                                      
+        }	
+    ?>
+</div>
 
-                <?php 					
-						$query_res= mysqli_query($db,"select * from dishes LIMIT 6"); 
-                                while($r=mysqli_fetch_array($query_res))
-                                {
-                                        
-                                    echo '  <div class="col-xs-12 col-sm-6 col-md-4 food-item">
-                                            <div class="food-item-wrap">
-                                                <div class="figure-wrap bg-image" data-image-src="admin/Res_img/dishes/'.$r['img'].'"></div>
-                                                <div class="content">
-                                                    <h5><a href="dishes.php?res_id='.$r['rs_id'].'">'.$r['title'].'</a></h5>
-                                                    <div class="product-name">'.$r['slogan'].'</div>
-                                                    <div class="price-btn-block"> <span class="price">'.$r['price'].'VND</span> <a href="dishes.php?res_id='.$r['rs_id'].'" class="btn theme-btn-dash pull-right">Mua ngay</a> </div>
-                                                </div>
-                                                
-                                            </div>
-                                    </div>';                                      
-                                }	
-						?>
-            </div>
         </div>
     </section>
     

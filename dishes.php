@@ -139,10 +139,12 @@ foreach ($_SESSION["cart_item"] as $item)
                                 </div>
 
                                 <div class="form-group row no-gutter">
-                                    <div class="col-xs-8">
-                                        <input type="text" class="form-control b-r-0" value=<?php echo $item["price"]."VND"; ?> readonly id="exampleSelect1">
+                                <div class="col-xs-8">
+                                <input type="text" class="form-control b-r-0" 
+                                    value="<?php echo number_format($item['price'], 0, ',', '.') . ' VND'; ?>" 
+                                    readonly id="exampleSelect1">
+                            </div>
 
-                                    </div>
                                     <div class="col-xs-4">
                                         <input class="form-control" type="text" readonly value='<?php echo $item["quantity"]; ?>' id="example-number-input">
                                     </div>
@@ -165,7 +167,7 @@ $item_total += ($item["price"]*$item["quantity"]);
                         <div class="widget-body">
                             <div class="price-wrap text-xs-center">
                                 <p>Đơn giá</p>
-                                <h3 class="value"><strong><?php echo $item_total."VND"; ?></strong></h3>
+                                <h3 class="value"><strong><?php echo number_format($item_total, 0, ',', '.') . ' VND'; ?></strong></h3>
                                 <p>Miễn phí vận chuyển!</p>
                                 <?php
                                         if($item_total==0){
