@@ -76,7 +76,7 @@ if(isset($_POST['submit'] ))
                     <meta name="description" content="">
                     <meta name="author" content="">
                     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
-                    <title>Update Users</title>
+                    <title>Cập nhập thông tin</title>
                     <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
                     <link href="css/helper.css" rel="stylesheet">
                     <link href="css/style.css" rel="stylesheet">
@@ -140,50 +140,49 @@ if(isset($_POST['submit'] ))
 
                         <div class="left-sidebar">
 
-                            <div class="scroll-sidebar">
+                        <div class="scroll-sidebar">
+                            <nav class="sidebar-nav">
+                                <ul id="sidebarnav">
+                                    <li class="nav-devider"></li>
+                                    <li class="nav-label">Trang chính</li>
+                                    <li> <a href="dashboard.php"><i class="fa fa-tachometer"></i><span>Tổng quan</span></a>
+                                    </li>
+                                    <li class="nav-label"></li>
+                                    <li> <a href="all_users.php"> <span><i class="fa fa-user f-s-20 "></i></span><span>Người dùng</span></a></li>
+                                    <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-archive f-s-20 color-warning"></i><span class="hide-menu">Nhà hàng</span></a>
+                                        <ul aria-expanded="false" class="collapse">
+                                            <li><a href="all_restaurant.php">Nhà hàng</a></li>
+                                            <li><a href="add_category.php">Thêm sản phẩm</a></li>
+                                            <li><a href="add_restaurant.php">Thêm nhà hàng</a></li>
 
-                                <nav class="sidebar-nav">
-                                    <ul id="sidebarnav">
-                                        <li class="nav-devider"></li>
-                                        <li class="nav-label">Home</li>
-                                        <li> <a href="dashboard.php"><i class="fa fa-tachometer"></i><span>Dashboard</span></a></li>
-                                        <li class="nav-label">Log</li>
-                                        <li> <a href="all_users.php"> <span><i class="fa fa-user f-s-20 "></i></span><span>Users</span></a></li>
-                                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-archive f-s-20 color-warning"></i><span class="hide-menu">Nhà hàng</span></a>
-                                            <ul aria-expanded="false" class="collapse">
-                                                <li><a href="all_restaurant.php">All Restaurants</a></li>
-                                                <li><a href="add_category.php">Add Category</a></li>
-                                                <li><a href="add_restaurant.php">Add Restaurant</a></li>
+                                        </ul>
+                                    </li>
+                                    <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-cutlery" aria-hidden="true"></i><span class="hide-menu">Menu</span></a>
+                                        <ul aria-expanded="false" class="collapse">
+                                            <li><a href="all_menu.php">All Menu</a></li>
+                                            <li><a href="add_menu.php">Add Menu</a></li>
 
-                                            </ul>
-                                        </li>
-                                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-cutlery" aria-hidden="true"></i><span class="hide-menu">Menu</span></a>
-                                            <ul aria-expanded="false" class="collapse">
-                                                <li><a href="all_menu.php">All Menues</a></li>
-                                                <li><a href="add_menu.php">Add Menu</a></li>
+                                        
 
-                                
+                                        </ul>
+                                    </li>
+                                    <li> <a href="all_orders.php"><i class="fa fa-shopping-cart" aria-hidden="true"></i><span>Đơn hàng</span></a></li>
 
-                                            </ul>
-                                        </li>
-                                        <li> <a href="all_orders.php"><i class="fa fa-shopping-cart" aria-hidden="true"></i><span>Orders</span></a></li>
+                                </ul>
+                            </nav>
 
-
-                                    </ul>
-                                </nav>
-
-                            </div>
+        </div>
 
                         </div>
 
                         <div class="page-wrapper" style="height:1200px;">
                             <div style="padding-top: 10px;">
-                                <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="https://www.youtube.com/@codecampbdofficial">Code Camp BD</a> is the sole owner of this script. It is not suitable for personal use. And releasing it in demo version. Besides, it is being provided for free only from <a href="https://www.youtube.com/@codecampbdofficial">Code Camp BD</a>. For any of your problems contact us on <a href="https://www.youtube.com/@codecampbdofficial">Code Camp BD</a> facebook group / page or message <a href="https://www.facebook.com/dev.mhrony">MH RONY</a> on facebook. Thanks for staying with <a href="https://www.youtube.com/@codecampbdofficial">Code Camp BD</a>.</marquee>
+                                <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="#">ONLINE FOOD HQ - HỌC VIỆN QUẢN LÝ GIÁO DỤC</a>.</marquee>
                             </div>
 
                             <div class="row page-titles">
                                 <div class="col-md-5 align-self-center">
-                                    <h3 class="text-primary">Dashboard</h3>
+                                    <h3 class="text-primary">Tổng quan</h3>
                                 </div>
 
                             </div>
@@ -193,12 +192,7 @@ if(isset($_POST['submit'] ))
                             <div class="container-fluid">
 
                                 <div class="row">
-
-
-
                                     <div class="container-fluid">
-
-
 
                                         <?php  
 									        echo $error;
@@ -207,15 +201,10 @@ if(isset($_POST['submit'] ))
 											
 											
 											?>
-
-                        
-
-
-
                                         <div class="col-lg-12">
                                             <div class="card card-outline-primary">
                                                 <div class="card-header">
-                                                    <h4 class="m-b-0 text-white">Update Users</h4>
+                                                    <h4 class="m-b-0 text-white">Cập nhập người dùng</h4>
                                                 </div>
                                                 <div class="card-body">
                                                     <?php $ssql ="select * from users where u_id='$_GET[user_upd]'";
@@ -228,14 +217,14 @@ if(isset($_POST['submit'] ))
                                                             <div class="row p-t-20">
                                                                 <div class="col-md-6">
                                                                     <div class="form-group">
-                                                                        <label class="control-label">Username</label>
+                                                                        <label class="control-label">Tên đăng nhập</label>
                                                                         <input type="text" name="uname" class="form-control" value="<?php  echo $newrow['username']; ?>" placeholder="username">
                                                                     </div>
                                                                 </div>
 
                                                                 <div class="col-md-6">
                                                                     <div class="form-group has-danger">
-                                                                        <label class="control-label">First-Name</label>
+                                                                        <label class="control-label">Họ</label>
                                                                         <input type="text" name="fname" class="form-control form-control-danger" value="<?php  echo $newrow['f_name'];  ?>" placeholder="jon">
                                                                     </div>
                                                                 </div>
@@ -246,7 +235,7 @@ if(isset($_POST['submit'] ))
                                                             <div class="row p-t-20">
                                                                 <div class="col-md-6">
                                                                     <div class="form-group">
-                                                                        <label class="control-label">Last-Name </label>
+                                                                        <label class="control-label">Tên </label>
                                                                         <input type="text" name="lname" class="form-control" placeholder="doe" value="<?php  echo $newrow['l_name']; ?>">
                                                                     </div>
                                                                 </div>
@@ -264,14 +253,14 @@ if(isset($_POST['submit'] ))
                                                             <div class="row">
                                                                 <div class="col-md-6">
                                                                     <div class="form-group">
-                                                                        <label class="control-label">Password</label>
+                                                                        <label class="control-label">Mật khẩu</label>
                                                                         <input type="text" name="password" class="form-control form-control-danger" value="<?php  echo $newrow['password'];  ?>" placeholder="password">
                                                                     </div>
                                                                 </div>
 
                                                                 <div class="col-md-6">
                                                                     <div class="form-group">
-                                                                        <label class="control-label">Phone</label>
+                                                                        <label class="control-label">Số điện thoại</label>
                                                                         <input type="text" name="phone" class="form-control form-control-danger" value="<?php  echo $newrow['phone'];  ?>" placeholder="phone">
                                                                     </div>
                                                                 </div>
@@ -284,8 +273,8 @@ if(isset($_POST['submit'] ))
                                                         </div>
                                                 </div>
                                                 <div class="form-actions">
-                                                    <input type="submit" name="submit" class="btn btn-primary" value="Save">
-                                                    <a href="all_users.php" class="btn btn-inverse">Cancel</a>
+                                                    <input type="submit" name="submit" class="btn btn-primary" value="Lưu">
+                                                    <a href="all_users.php" class="btn btn-inverse">Trở lại</a>
                                                 </div>
                                                 </form>
                                             </div>

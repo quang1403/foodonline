@@ -16,7 +16,7 @@ if(isset($_POST['submit'] ))
 		empty($_POST['cpassword']) ||
 		empty($_POST['cpassword']))
 		{
-			$message = "All fields must be Required!";
+			$message = "Thông tin không được trống!";
 		}
 	else
 	{
@@ -140,35 +140,35 @@ if(isset($_POST['submit'] ))
                                     <form action="" method="post">
                                         <div class="row">
                                             <div class="form-group col-sm-12">
-                                                <label for="exampleInputEmail1">Username</label>
+                                                <label for="exampleInputEmail1">Tên đăng nhập</label>
                                                 <input class="form-control" type="text" name="username" id="example-text-input">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputEmail1">First Name</label>
+                                                <label for="exampleInputEmail1">Họ</label>
                                                 <input class="form-control" type="text" name="firstname" id="example-text-input">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputEmail1">Last Name</label>
+                                                <label for="exampleInputEmail1">Tên</label>
                                                 <input class="form-control" type="text" name="lastname" id="example-text-input-2">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputEmail1">Email Address</label>
+                                                <label for="exampleInputEmail1">Email </label>
                                                 <input type="text" class="form-control" name="email" id="exampleInputEmail1" aria-describedby="emailHelp">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputEmail1">Phone number</label>
+                                                <label for="exampleInputEmail1">Số điện thoại</label>
                                                 <input class="form-control" type="text" name="phone" id="example-tel-input-3">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputPassword1">Password</label>
+                                                <label for="exampleInputPassword1">Mật khẩu</label>
                                                 <input type="password" class="form-control" name="password" id="exampleInputPassword1">
                                             </div>
                                             <div class="form-group col-sm-6">
-                                                <label for="exampleInputPassword1">Confirm password</label>
+                                                <label for="exampleInputPassword1">Nhập lại mật khẩu</label>
                                                 <input type="password" class="form-control" name="cpassword" id="exampleInputPassword2">
                                             </div>
                                             <div class="form-group col-sm-12">
-                                                <label for="exampleTextarea">Delivery Address</label>
+                                                <label for="exampleTextarea">Địa chỉ</label>
                                                 <textarea class="form-control" id="exampleTextarea" name="address" rows="3"></textarea>
                                             </div>
 
@@ -176,7 +176,7 @@ if(isset($_POST['submit'] ))
 
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <p> <input type="submit" value="Register" name="submit" class="btn theme-btn"> </p>
+                                                <p> <input type="submit" value="Đăng ký" name="submit" class="btn theme-btn"> </p>
                                             </div>
                                         </div>
                                     </form>

@@ -146,9 +146,9 @@ session_start();
                                                     <table id="myTable" class="table table-bordered table-striped table-hover">
                                                         <thead class="thead-dark">
                                                             <tr>
-                                                                <th>Username</th>
-                                                                <th>FirstName</th>
-                                                                <th>LastName</th>
+                                                                <th>Tên đăng nhập</th>
+                                                                <th>Họ</th>
+                                                                <th>Tên</th>
                                                                 <th>Email</th>
                                                                 <th>Điện thoại</th>
                                                                 <th>Địa chỉ</th>

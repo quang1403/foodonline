@@ -51,11 +51,11 @@ if (isset($_POST['submit'])) {
     </div>
     <div class="form">
         <div class="thumbnail"><img src="images/manager.png" /></div>
-        <span style="color:red;"><?php echo $message; ?></span>
-        <span style="color:green;"><?php echo $success; ?></span>
+        <span ><?php echo $message; ?></span>
+        <span ><?php echo $success; ?></span>
         <form class="login-form" action="index.php" method="post">
-            <input type="text" placeholder="Username" name="username" />
-            <input type="password" placeholder="Password" name="password" />
+            <input type="text" placeholder="Tên đăng nhập" name="username" />
+            <input type="password" placeholder="Mật khẩu" name="password" />
             <input type="submit" name="submit" value="Đăng nhập" />
 
         </form>

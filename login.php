@@ -89,7 +89,7 @@ if(isset($_POST['submit']))
 	                            } 
 							else
 							    {
-                                      	$message = "Invalid Username or Password!"; 
+                                      	$message = "Tên đăng nhập hoặc mật khẩu không đúng!"; 
                                 }
 	 }
 	
@@ -108,12 +108,13 @@ if(isset($_POST['submit']))
                     </div>
                     <div class="form">
                         <h2>Đăng nhập</h2>
-                        <span style="color:red;"><?php echo $message; ?></span>
-                        <span style="color:green;"><?php echo $success; ?></span>
+                        <?php if ($message ?? false) echo "<span style='color:red;'>$message</span>"; ?>
+                        <?php if ($success ?? false) echo "<span style='color:green;'>$success</span>"; ?>
+
                         <form action="" method="post">
-                            <input type="text" placeholder="Username" name="username" />
-                            <input type="password" placeholder="Password" name="password" />
-                            <input type="submit" id="buttn" name="submit" value="Login" />
+                            <input type="text" placeholder="Tên đăng nhập" name="username" />
+                            <input type="password" placeholder="Mật khẩu" name="password" />
+                            <input type="submit" id="buttn" name="submit" value="Đăng nhập" />
                         </form>
                     </div>
 

@@ -138,18 +138,18 @@ session_start();
                 <table id="example23" class="display nowrap table table-hover table-striped table-bordered" cellspacing="0" width="100%">
                     <thead class="thead-dark">
                         <tr>
-                            <th>Category</th>
-                            <th>Name</th>
+                            <th>Phân loại</th>
+                            <th>Tên</th>
                             <th>Email</th>
-                            <th>Phone</th>
+                            <th>Số điện thoại</th>
                             <th>Url</th>
-                            <th>Open Hrs</th>
-                            <th>Close Hrs</th>
-                            <th>Open Days</th>
-                            <th>Address</th>
-                            <th>Image</th>
-                            <th>Date</th>
-                            <th>Action</th>
+                            <th>Giờ mở cửa</th>
+                            <th>Giờ đóng cửa</th>
+                            <th>Ngày mở cửa</th>
+                            <th>Địa chỉ</th>
+                            <th>Ảnh</th>
+                            <th>Thời gian</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
 
@@ -206,19 +206,7 @@ session_start();
                                             </div>
                                         </div>
 
-
-
-
-
-
-
-
-
-
-
-
                                     
-
                                     </div>
 
                                 </div>
