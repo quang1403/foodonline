@@ -160,19 +160,24 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
     <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link href="css/helper.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/user.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <style type="text/css" rel="stylesheet">
-    .indent-small {
-        margin-left: 5px;
+            .indent-small {
+        margin-left: 8px;
     }
 
     .form-group.internal {
-        margin-bottom: 0;
+        margin-bottom: 10px;
     }
 
     .dialog-panel {
-        margin: 10px;
+        margin: 15px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .datepicker-dropdown {
@@ -180,44 +185,41 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
     }
 
     .panel-body {
-        background: #e5e5e5;
-        background: -moz-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #e5e5e5), color-stop(100%, #ffffff));
-        background: -webkit-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        background: -o-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        background: -ms-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        background: radial-gradient(ellipse at center, #e5e5e5 0%, #ffffff 100%);
-        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e5e5e5', endColorstr='#ffffff', GradientType=1);
+        background: linear-gradient(to bottom, #e5e5e5, #ffffff);
         font: 600 15px "Open Sans", Arial, sans-serif;
+        padding: 20px;
+        border-radius: 10px;
     }
 
     label.control-label {
         font-weight: 600;
-        color: #777;
+        color: #555;
     }
 
     table {
-        width: 650px;
+        width: 100%;
+        max-width: 800px;
         border-collapse: collapse;
-        margin: auto;
-        margin-top: 30px;
+        margin: 30px auto;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     tr:nth-of-type(odd) {
-        background: #eee;
+        background: #f9f9f9;
     }
 
     th {
         background: #004684;
         color: white;
         font-weight: bold;
+        text-align: left;
     }
 
-    td,
-    th {
-        padding: 10px;
-        border: 1px solid #ccc;
-        text-align: left;
+    td, th {
+        padding: 12px;
+        border: 1px solid #ddd;
         font-size: 14px;
     }
     
@@ -226,23 +228,42 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
         height: 150px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #004684;
+        border: 4px solid #004684;
         margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
     .avatar-container {
         text-align: center;
         margin-bottom: 20px;
     }
-    
+
+    #edit-profile-btn {
+        height: 40px;
+        line-height: 40px;
+        border-radius: 4px;
+        border: none;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #edit-profile-btn:hover {
+        background: #0056b3;
+    }
+
     .btn-logout {
         background-color: #dc3545;
+        height: 40px;
+        line-height: 40px;
+        text-decoration: none;
         color: white;
         border: none;
         padding: 8px 15px;
         border-radius: 4px;
         cursor: pointer;
-        margin-left: 10px;
+        transition: 0.3s;
     }
     
     .btn-logout:hover {
@@ -255,13 +276,15 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
     
     .section-title {
         color: #004684;
-        border-bottom: 2px solid #004684;
-        padding-bottom: 5px;
+        border-bottom: 3px solid #004684;
+        padding-bottom: 8px;
         margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: bold;
     }
     
     .edit-mode {
-        margin-top: 10px;
+        margin-top: 15px;
     }
     
     .password-toggle {
@@ -270,22 +293,27 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
         display: block;
         color: #004684;
         text-decoration: underline;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+    
+    .password-toggle:hover {
+        color: #002b5c;
     }
     
     .back-button {
         display: inline-block;
-        padding: 8px 16px;
+        padding: 10px 18px;
         background-color: #28a745;
         color: white;
         text-decoration: none;
         border-radius: 4px;
         margin-right: 10px;
+        transition: 0.3s;
     }
     
     .back-button:hover {
         background-color: #218838;
-        color: white;
-        text-decoration: none;
     }
     
     .top-actions {
@@ -296,7 +324,59 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
     .password-section {
         margin-top: 20px;
         padding-top: 20px;
-        border-top: 1px dashed #ccc;
+        border-top: 2px dashed #ccc;
+    }
+
+    /* Edit Profile Form Styling */
+    #edit-profile-form {
+        display: none;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #edit-profile-form .form-group {
+        margin-bottom: 15px;
+    }
+
+    #edit-profile-form label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    #edit-profile-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    #edit-profile-form button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #edit-profile-form .btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    #edit-profile-form .btn-success:hover {
+        background-color: #218838;
+    }
+
+    #edit-profile-form .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    #edit-profile-form .btn-secondary:hover {
+        background-color: #545b62;
     }
     </style>
     
