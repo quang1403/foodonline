@@ -52,7 +52,7 @@ session_start();
 
 									
 									echo  '<li class="nav-item"><a href="your_orders.php" class="nav-link active">Đơn hàng</a> </li>';
-									echo  '<li class="nav-item"><a href="logout.php" class="nav-link active">Đăng xuất</a> </li>';
+									echo  '<li class="nav-item"><a href="userprofile.php" class="nav-link active">Thông tin</a> </li>';
 							}
 
 						?>
