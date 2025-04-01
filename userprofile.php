@@ -106,37 +106,45 @@ else
         }
         
         // Check if password fields are filled
-        if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empty($_POST['confirm_password'])) {
-            $current_password = $_POST['current_password'];
-            $new_password = $_POST['new_password'];
-            $confirm_password = $_POST['confirm_password'];
-            
-            // Verify current password
-            $check_pass = mysqli_query($db, "SELECT password FROM users WHERE u_id='$current_user_id'");
-            $pass_row = mysqli_fetch_array($check_pass);
-            $db_password = $pass_row['password'];
-            
-            if(password_verify($current_password, $db_password) || $current_password === $db_password) {
-                // Current password is correct, now check if new passwords match
-                if($new_password === $confirm_password) {
-                    // Hash new password
-                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                    
-                    // Update password
-                    $update_pass = mysqli_query($db, "UPDATE users SET password='$hashed_password' WHERE u_id='$current_user_id'");
-                    
-                    if($update_pass) {
-                        echo "<script>alert('Mật khẩu đã được cập nhật thành công!');</script>";
-                    } else {
-                        echo "<script>alert('Có lỗi xảy ra, vui lòng thử lại');</script>";
-                    }
-                } else {
-                    echo "<script>alert('Mật khẩu mới không khớp!');</script>";
-                }
+if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empty($_POST['confirm_password'])) {
+    $current_password = $_POST['current_password'];
+    $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
+    
+    // Verify current password
+    $check_pass = mysqli_query($db, "SELECT password FROM users WHERE u_id='$current_user_id'");
+    $pass_row = mysqli_fetch_array($check_pass);
+    $db_password = $pass_row['password'];
+    
+    // Verify the current password matches the stored hash
+    if(md5($current_password) === $db_password) {
+        // Current password is correct, now check if new passwords match
+        if($new_password === $confirm_password) {
+            // Validate password length (matching your registration requirements)
+            if(strlen($new_password) < 6) {
+                echo "<script>alert('Mật khẩu phải có ít nhất 6 ký tự!');</script>";
             } else {
-                echo "<script>alert('Mật khẩu hiện tại không đúng!');</script>";
+                // Hash new password using md5 (Note: consider using stronger hashing in production)
+                $hashed_password = md5($new_password);
+                
+                // Update password
+                $update_pass = mysqli_query($db, "UPDATE users SET password='$hashed_password' WHERE u_id='$current_user_id'");
+                
+                if($update_pass) {
+                    echo "<script>alert('Mật khẩu đã được cập nhật thành công!');</script>";
+                } else {
+                    echo "<script>alert('Có lỗi xảy ra, vui lòng thử lại!');</script>";
+                }
             }
+        } else {
+            echo "<script>alert('Mật khẩu mới không khớp!');</script>";
         }
+    } else {
+        echo "<script>alert('Mật khẩu hiện tại không đúng!');</script>";
+    }
+} else {
+    echo "<script>alert('Vui lòng điền đầy đủ thông tin!');</script>";
+}
     }
 ?>
 <!DOCTYPE html>
