@@ -60,12 +60,12 @@ if(empty($_SESSION["adm_id"]))
                                                 <?php
                                                 // Truy vấn dữ liệu thu nhập theo từng nhà hàng
                                                 $sql = "SELECT r.rs_id, r.title, 
-                                                       COUNT(DISTINCT o.o_id) as total_orders,
-                                                       SUM(o.price) as total_earnings
-                                                       FROM restaurant r
-                                                       LEFT JOIN users_orders o ON r.rs_id = o.rs_id AND o.status = 'closed'
-                                                       GROUP BY r.rs_id
-                                                       ORDER BY total_earnings DESC";
+                                                    COUNT(DISTINCT o.o_id) AS total_orders,
+                                                    COALESCE(SUM(o.price * o.quantity), 0) AS total_earnings
+                                                FROM restaurant r
+                                                LEFT JOIN users_orders o ON r.rs_id = o.rs_id AND o.status = 'closed'
+                                                GROUP BY r.rs_id
+                                                ORDER BY total_earnings DESC";
                                                 
                                                 $query = mysqli_query($db, $sql);
                                                 $stt = 1;

@@ -273,12 +273,15 @@ else
                 <span><i class="fa fa-usd f-s-40" aria-hidden="true"></i></span>
             </div>
             <div class="media-body media-text-right">
-                <h2><?php 
-                    $result = mysqli_query($db, 'SELECT SUM(price) AS value_sum FROM users_orders WHERE status = "closed"'); 
-                    $row = mysqli_fetch_assoc($result); 
-                    $sum = $row['value_sum'] ? number_format($row['value_sum'], 0, ',', '.') : 0;
-                    echo $sum;
-                ?> VNĐ</h2>
+            <h2>
+    <?php 
+        $result = mysqli_query($db, 'SELECT COALESCE(SUM(price * quantity), 0) AS value_sum FROM users_orders WHERE status = "closed"'); 
+        $row = mysqli_fetch_assoc($result); 
+        $sum = number_format($row['value_sum'], 0, ',', '.');
+        echo $sum;
+    ?> VNĐ
+</h2>
+
                 <p class="m-b-0"><a href="restaurant_earnings.php">Thu nhập theo nhà hàng</a></p>
             </div>
         </div>

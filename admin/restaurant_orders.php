@@ -77,9 +77,9 @@ if(!$restaurant) {
                                             // Tính tổng số đơn hàng và doanh thu
                                             $sql_summary = "SELECT 
                                                 COUNT(DISTINCT o_id) as total_orders,
-                                                SUM(price) as total_revenue,
+                                                SUM(price*quantity) as total_revenue,
                                                 COUNT(CASE WHEN status = 'closed' THEN o_id END) as completed_orders,
-                                                SUM(CASE WHEN status = 'closed' THEN price ELSE 0 END) as completed_revenue
+                                                SUM(CASE WHEN status = 'closed' THEN price*quantity ELSE 0 END) as completed_revenue
                                             FROM users_orders 
                                             WHERE rs_id = $rs_id";
                                             
