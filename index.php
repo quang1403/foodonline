@@ -112,35 +112,80 @@ session_start();
     </section>
 
     <section class="popular">
-        <div class="container">
-            <div class="title text-xs-center m-b-30">
-                <h2>Món ăn phổ biến</h2>
-                <p class="lead">"Top món bán chạy – Không thử sao biết?"</p>
-            </div>
-            <div class="row">
-    <?php 					
-        $query_res = mysqli_query($db, "SELECT * FROM dishes LIMIT 6"); 
-        while ($r = mysqli_fetch_array($query_res)) {
-            echo '<div class="col-xs-12 col-sm-6 col-md-4 food-item">
-                    <div class="food-item-wrap">
-                        <div class="figure-wrap bg-image" data-image-src="admin/Res_img/dishes/' . $r['img'] . '"></div>
-                        <div class="content">
-                            <h5><a href="dishes.php?res_id=' . $r['rs_id'] . '">' . $r['title'] . '</a></h5>
-                            <div class="product-name">' . $r['slogan'] . '</div>
-                            <div class="price-btn-block"> 
-                                <span class="price">' . number_format($r['price'], 0, ',', '.') . ' VND</span> 
-                                <a href="dishes.php?res_id=' . $r['rs_id'] . '" class="btn theme-btn-dash pull-right">Mua ngay</a> 
-                            </div>
-                        </div>
-                    </div>
-                </div>';                                      
-        }	
-    ?>
-</div>
-
+    <div class="container">
+        <div class="title text-center mb-4">
+            <h2 class="fw-bold">Món ăn phổ biến</h2>
+            <p class="lead">"Top món bán chạy – Không thử sao biết?"</p>
         </div>
-    </section>
-    
+        <div class="row">
+<?php
+    $query_res = mysqli_query($db, "
+        SELECT d.*, COALESCE(SUM(uo.quantity), 0) AS total_sold
+        FROM dishes d
+        LEFT JOIN users_orders uo ON d.title = uo.title
+        GROUP BY d.d_id
+        ORDER BY total_sold DESC
+        LIMIT 6
+    ");
+
+    while ($r = mysqli_fetch_array($query_res)) {
+        echo '<div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                <div class="food-card p-3 shadow-sm">
+                    <div class="food-image" style="background-image: url(\'admin/Res_img/dishes/' . $r['img'] . '\');"></div>
+                    <div class="food-content p-3">
+                        <h5 class="food-title fw-bold"><a href="dishes.php?res_id=' . $r['rs_id'] . '" class="text-dark text-decoration-none">' . $r['title'] . '</a></h5>
+                        <p class="text-muted small">' . $r['slogan'] . '</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="food-price fw-bold text-danger">' . number_format($r['price'], 0, ',', '.') . ' VND</span>
+                            <span class="sold-count text-muted small">Đã bán: ' . $r['total_sold'] . ' suất</span>
+                        </div>
+                        <a href="dishes.php?res_id=' . $r['rs_id'] . '" class="btn btn-primary btn-sm w-100 mt-2">Mua ngay</a>
+                    </div>
+                </div>
+            </div>';
+    }
+?>
+        </div>
+    </div>
+</section>
+
+<style>
+    .food-card {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .food-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .food-image {
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .food-title {
+        font-size: 18px;
+    }
+
+    .food-price {
+        font-size: 16px;
+    }
+
+    .btn-primary {
+        background-color: #ff5722;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #e64a19;
+    }
+</style>
 
     <section class="how-it-works">
         <div class="container">
