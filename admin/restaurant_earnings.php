@@ -93,6 +93,9 @@ if(empty($_SESSION["adm_id"]))
                                                 ?>
                                             </tbody>
                                         </table>
+                                        <div class="m-t-30">
+                                        <a href="dashboard.php" class="btn btn-primary">Quay lại</a>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
