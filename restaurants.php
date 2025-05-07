@@ -60,6 +60,20 @@ session_start();
     .filter-form {
         margin-top: 20px;
     }
+    /* Thêm style để đảm bảo chiều cao tối thiểu cho vùng nội dung */
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .restaurants-page {
+        flex: 1;
+        padding-bottom: 40px; /* Thêm padding phía dưới */
+    }
+    /* Style cho footer */
+    footer {
+        margin-top: auto;
+    }
 </style>
 
 <div class="page-wrapper">
@@ -88,17 +102,16 @@ session_start();
             <div class="row">
 
                 <!-- Bộ lọc khu vực -->
-<div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
-    <form method="GET" class="filter-form">
-        <h5><strong>Lọc theo khu vực</strong></h5>
-        <div class="form-group position-relative">
-            <input type="text" id="district-input" name="district" class="form-control" autocomplete="off" placeholder="Nhập tên khu vực...">
-            <div id="suggestions" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
-    </form>
-</div>
-
+                <div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
+                    <form method="GET" class="filter-form">
+                        <h5><strong>Lọc theo khu vực</strong></h5>
+                        <div class="form-group position-relative">
+                            <input type="text" id="district-input" name="district" class="form-control" autocomplete="off" placeholder="Nhập tên khu vực...">
+                            <div id="suggestions" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
+                    </form>
+                </div>
 
                 <!-- Danh sách nhà hàng -->
                 <div class="col-xs-12 col-sm-7 col-md-7 col-lg-9">
@@ -111,7 +124,6 @@ session_start();
                                 $where .= " AND (district LIKE '%$district%' OR address LIKE '%$district%')";
                             }
                             
-
                             $ress = mysqli_query($db, "SELECT * FROM restaurant $where");
                             if (mysqli_num_rows($ress) > 0) {
                                 while ($rows = mysqli_fetch_array($ress)) {
@@ -130,6 +142,7 @@ session_start();
                                 }
                             } else {
                                 echo '<div class="col-md-12"><p>Không tìm thấy nhà hàng nào.</p></div>';
+                                echo '<div class="col-md-12" style="min-height: 300px;"></div>'; // Thêm phần tử có chiều cao tối thiểu
                             }
                             ?>
                         </div>
@@ -140,64 +153,65 @@ session_start();
         </div>
     </section>
 
-    <?php include "include/footer.php" ?>
+</div> <!-- Đóng page-wrapper ở đây, trước footer -->
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/tether.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/animsition.min.js"></script>
-    <script src="js/bootstrap-slider.min.js"></script>
-    <script src="js/jquery.isotope.min.js"></script>
-    <script src="js/headroom.js"></script>
-    <script src="js/foodpicky.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#searchButton').on('click', function() {
-                $('#searchInput').toggleClass('d-none').focus();
-            });
+<?php include "include/footer.php" ?>
 
-            $('#searchInput').on('keyup', function() {
-                var value = $(this).val().toLowerCase();
-                $('.restaurant-item').each(function() {
-                    var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
-                    $(this).toggle(title.indexOf(value) > -1);
-                });
+<script src="js/jquery.min.js"></script>
+<script src="js/tether.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/animsition.min.js"></script>
+<script src="js/bootstrap-slider.min.js"></script>
+<script src="js/jquery.isotope.min.js"></script>
+<script src="js/headroom.js"></script>
+<script src="js/foodpicky.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#searchButton').on('click', function() {
+            $('#searchInput').toggleClass('d-none').focus();
+        });
+
+        $('#searchInput').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('.restaurant-item').each(function() {
+                var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
+                $(this).toggle(title.indexOf(value) > -1);
             });
         });
-    </script>
-    <script>
-$(document).ready(function() {
-    $('#district-input').keyup(function() {
-        let query = $(this).val();
-        if (query.length > 0) {
-            $.ajax({
-                url: "get_districts.php",
-                method: "GET",
-                data: { q: query },
-                success: function(data) {
-                    $('#suggestions').fadeIn().html(data);
-                }
-            });
-        } else {
-            $('#suggestions').fadeOut();
-        }
     });
-
-    // Khi click vào gợi ý
-    $(document).on('click', '.suggestion-item', function(){
-    $('#searchInput').val($(this).text());
-    $('.suggestions-list').hide();
-});
-
-    // Ẩn gợi ý khi click ngoài
-    $(document).click(function(e) {
-        if (!$(e.target).closest('#district-input, #suggestions').length) {
-            $('#suggestions').fadeOut();
-        }
-    });
-});
 </script>
+<script>
+    $(document).ready(function() {
+        $('#district-input').keyup(function() {
+            let query = $(this).val();
+            if (query.length > 0) {
+                $.ajax({
+                    url: "get_districts.php",
+                    method: "GET",
+                    data: { q: query },
+                    success: function(data) {
+                        $('#suggestions').fadeIn().html(data);
+                    }
+                });
+            } else {
+                $('#suggestions').fadeOut();
+            }
+        });
 
+        // Khi click vào gợi ý
+        $(document).on('click', '.suggestion-item', function(){
+            $('#searchInput').val($(this).text());
+            $('.suggestions-list').hide();
+        });
+
+        // Ẩn gợi ý khi click ngoài
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#district-input, #suggestions').length) {
+                $('#suggestions').fadeOut();
+            }
+        });
+    });
+</script>
 
 </body>
 </html>
