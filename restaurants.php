@@ -88,24 +88,17 @@ session_start();
             <div class="row">
 
                 <!-- Bộ lọc khu vực -->
-                <div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
-                    <form method="GET" class="filter-form">
-                        <h5><strong>Lọc theo khu vực</strong></h5>
-                        <div class="form-group">
-                            <select name="district" class="form-control">
-                                <option value="">-- Tất cả --</option>
-                                <?php
-                                $areas = mysqli_query($db, "SELECT DISTINCT district FROM restaurant ORDER BY district ASC");
-                                while ($area = mysqli_fetch_assoc($areas)) {
-                                    $selected = (isset($_GET['district']) && $_GET['district'] == $area['district']) ? 'selected' : '';
-                                    echo "<option value='".$area['district']."' $selected>".$area['district']."</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
-                    </form>
-                </div>
+<div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
+    <form method="GET" class="filter-form">
+        <h5><strong>Lọc theo khu vực</strong></h5>
+        <div class="form-group position-relative">
+            <input type="text" id="district-input" name="district" class="form-control" autocomplete="off" placeholder="Nhập tên khu vực...">
+            <div id="suggestions" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
+    </form>
+</div>
+
 
                 <!-- Danh sách nhà hàng -->
                 <div class="col-xs-12 col-sm-7 col-md-7 col-lg-9">
@@ -171,6 +164,39 @@ session_start();
             });
         });
     </script>
+    <script>
+$(document).ready(function() {
+    $('#district-input').keyup(function() {
+        let query = $(this).val();
+        if (query.length > 0) {
+            $.ajax({
+                url: "get_districts.php",
+                method: "GET",
+                data: { q: query },
+                success: function(data) {
+                    $('#suggestions').fadeIn().html(data);
+                }
+            });
+        } else {
+            $('#suggestions').fadeOut();
+        }
+    });
+
+    // Khi click vào gợi ý
+    $(document).on('click', '.suggestion-item', function(){
+    $('#searchInput').val($(this).text());
+    $('.suggestions-list').hide();
+});
+
+    // Ẩn gợi ý khi click ngoài
+    $(document).click(function(e) {
+        if (!$(e.target).closest('#district-input, #suggestions').length) {
+            $('#suggestions').fadeOut();
+        }
+    });
+});
+</script>
+
 
 </body>
 </html>
