@@ -66,7 +66,7 @@ session_start();
     </header>
     
 
-    <section class="hero bg-image" data-image-src="images/img/banner2.png">
+    <section class="hero bg-image" data-image-src="images/img/banner.png">
         <div class="hero-inner">
             <div class="container text-center hero-text font-white">
                 <h1>Hương vị tuyệt vời, giao hàng thần tốc! </h1>
