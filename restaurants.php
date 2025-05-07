@@ -108,8 +108,9 @@ session_start();
                             $where = " WHERE 1=1 ";
                             if (!empty($_GET['district'])) {
                                 $district = mysqli_real_escape_string($db, $_GET['district']);
-                                $where .= " AND district = '$district' ";
+                                $where .= " AND (district LIKE '%$district%' OR address LIKE '%$district%')";
                             }
+                            
 
                             $ress = mysqli_query($db, "SELECT * FROM restaurant $where");
                             if (mysqli_num_rows($ress) > 0) {
