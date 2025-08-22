@@ -218,16 +218,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-
-
-                                  </li>
-                                            </ul>
-                                            <p class="text-xs-center"> <input type="submit" onclick="return confirm('Xác nhận thanh toán?');" name="submit" class="btn btn-success btn-block" value="Thanh toán"> </p>
-                                        </div>
-                            </form>
-                        </div>
-                    </div>
-
+    </li>
+            </ul>
+            <p class="text-xs-center"> <input type="submit" onclick="return confirm('Xác nhận thanh toán?');" name="submit" class="btn btn-success btn-block" value="Thanh toán"> </p>
+                </div>
+                </form>
+            </div>
+        </div>
             </div>
         </div>
         </form>

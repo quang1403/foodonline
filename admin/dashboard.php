@@ -282,7 +282,7 @@ else
     ?> VNĐ
 </h2>
 
-                <p class="m-b-0"><a href="restaurant_earnings.php">Thu nhập theo nhà hàng</a></p>
+                <p class="m-b-0" style="text-align:center;"><a href="restaurant_earnings.php">Thu nhập theo nhà hàng</a></p>
             </div>
         </div>
     </div>
