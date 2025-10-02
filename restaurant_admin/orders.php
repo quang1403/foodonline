@@ -7,7 +7,12 @@ if(empty($_SESSION["res_admin_id"])) {
     exit();
 }
 
-$res_id = $_SESSION["res_id"];
+// Lấy rs_id từ session hoặc từ bảng restaurant_admin
+$res_admin_id = $_SESSION["res_admin_id"];
+$res_query = mysqli_query($db, "SELECT rs_id FROM restaurant_admin WHERE id='$res_admin_id'");
+$res_row = mysqli_fetch_assoc($res_query);
+$res_id = $res_row['rs_id'];
+$_SESSION["res_id"] = $res_id;
 ?>
 
 <!DOCTYPE html>
@@ -119,68 +124,66 @@ $res_id = $_SESSION["res_id"];
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php
-                                    $sql = "SELECT users.*, users_orders.* 
-                                           FROM users 
-                                           INNER JOIN users_orders ON users.u_id = users_orders.u_id 
-                                           WHERE users_orders.rs_id = ? 
-                                           ORDER BY users_orders.date DESC";
-                                    
-                                    $stmt = mysqli_prepare($db, $sql);
-                                    mysqli_stmt_bind_param($stmt, "i", $res_id);
-                                    mysqli_stmt_execute($stmt);
-                                    $result = mysqli_stmt_get_result($stmt);
-                                    
-                                    while($rows = mysqli_fetch_array($result)) {
-                                        echo '<tr>
-                                            <td>'.$rows['username'].'</td>
-                                            <td>'.$rows['title'].'</td>
-                                            <td>'.$rows['quantity'].'</td>
-                                            <td>'.number_format($rows['price'], 0, ',', '.').' VNĐ</td>
-                                            <td>'.$rows['address'].'</td>';
-                                        
-                                        // Status badge
-                                        $status = $rows['status'];
-                                        $badge_class = '';
-                                        $status_text = '';
-                                        $icon = '';
-                                        
-                                        switch($status) {
-                                            case '':
-                                                $badge_class = 'bg-info';
-                                                $status_text = 'Chờ xác nhận';
-                                                $icon = 'clock';
-                                                break;
-                                            case 'in process':
-                                                $badge_class = 'bg-warning';
-                                                $status_text = 'Đang giao';
-                                                $icon = 'motorcycle';
-                                                break;
-                                            case 'closed':
-                                                $badge_class = 'bg-success';
-                                                $status_text = 'Đã giao';
-                                                $icon = 'check-circle';
-                                                break;
-                                            case 'rejected':
-                                                $badge_class = 'bg-danger';
-                                                $status_text = 'Đã hủy';
-                                                $icon = 'times-circle';
-                                                break;
-                                        }
-                                        
-                                        echo '<td><span class="badge '.$badge_class.' status-badge">
-                                                <i class="fas fa-'.$icon.' me-1"></i>'.$status_text.'
-                                              </span></td>';
-                                        
-                                        echo '<td>'.$rows['date'].'</td>
-                                            <td>
-                                                <button class="btn btn-primary btn-sm update-status" data-id="'.$rows['o_id'].'">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </td>
-                                        </tr>';
-                                    }
-                                    ?>
+<?php
+$query_res = mysqli_query($db,"SELECT uo.*, u.username, u.address 
+    FROM users_orders uo
+    JOIN users u ON uo.u_id = u.u_id
+    WHERE uo.rs_id='$res_id'
+    ORDER BY uo.date DESC");
+
+if(!mysqli_num_rows($query_res)) {
+    echo '<tr><td colspan="8" class="text-center">Không có đơn hàng nào.</td></tr>';
+} else {
+    while($row = mysqli_fetch_assoc($query_res)) {
+        echo '<tr>
+            <td>'.htmlspecialchars($row['username']).'</td>
+            <td>'.htmlspecialchars($row['title']).'</td>
+            <td>'.$row['quantity'].'</td>
+            <td>'.number_format($row['price'], 0, ',', '.').' VNĐ</td>
+            <td>'.htmlspecialchars($row['address']).'</td>';
+
+        // Status badge
+        $status = $row['status'];
+        $badge_class = '';
+        $status_text = '';
+        $icon = '';
+        switch($status) {
+            case '':
+            case 'NULL':
+                $badge_class = 'bg-info';
+                $status_text = 'Chờ xác nhận';
+                $icon = 'clock';
+                break;
+            case 'in process':
+                $badge_class = 'bg-warning';
+                $status_text = 'Đang giao';
+                $icon = 'motorcycle';
+                break;
+            case 'closed':
+                $badge_class = 'bg-success';
+                $status_text = 'Đã giao';
+                $icon = 'check-circle';
+                break;
+            case 'rejected':
+                $badge_class = 'bg-danger';
+                $status_text = 'Đã hủy';
+                $icon = 'times-circle';
+                break;
+        }
+        echo '<td><span class="badge '.$badge_class.' status-badge">
+                <i class="fas fa-'.$icon.' me-1"></i>'.$status_text.'
+              </span></td>';
+
+        echo '<td>'.date('d/m/Y H:i', strtotime($row['date'])).'</td>
+            <td>
+                <button class="btn btn-primary btn-sm update-status" data-id="'.$row['o_id'].'">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>';
+    }
+}
+?>
                                 </tbody>
                             </table>
                         </div>

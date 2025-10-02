@@ -84,7 +84,9 @@ $res_id = $_SESSION["res_id"];
                             <img src="../admin/images/bookingSystem/logot.jpg" alt="Profile" class="rounded-circle" width="32">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="logout.php">Đăng xuất</a></li>
+                            <li><a class="dropdown-item text-danger" href="logout.php">
+    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+</a></li>
                         </ul>
                     </div>
                 </div>

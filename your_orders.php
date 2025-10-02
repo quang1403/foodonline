@@ -129,7 +129,7 @@ if(empty($_SESSION['user_id'])) {
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item" href="profile.php">
+                                <a class="dropdown-item" href="userprofile.php">
                                     <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
                                 </a>
                             </li>

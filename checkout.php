@@ -21,18 +21,13 @@ if(empty($_SESSION["user_id"])) {
         $item_total += ($item["price"] * $item["quantity"]);
 
         if($_POST['submit']) {
-            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price) 
-                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."')";
+            // Lấy rs_id từ bảng dishes
+            $dish = mysqli_fetch_assoc(mysqli_query($db, "SELECT rs_id FROM dishes WHERE title = '".$item["title"]."' LIMIT 1"));
+            $rs_id = $dish['rs_id'];
 
+            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price, rs_id, date) 
+                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."', '".$rs_id."', NOW())";
             mysqli_query($db, $SQL);
-
-            // Cập nhật rs_id sau khi đặt hàng thành công
-            $update_rs_id = "UPDATE users_orders uo 
-                             JOIN dishes d ON uo.title = d.title
-                             SET uo.rs_id = d.rs_id
-                             WHERE uo.rs_id = 0"; 
-
-            mysqli_query($db, $update_rs_id);
 
             unset($_SESSION["cart_item"]);
             unset($item["title"]);
