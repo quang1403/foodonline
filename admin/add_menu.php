@@ -1,347 +1,214 @@
-
-                <!DOCTYPE html>
-                <html lang="en">
-                <?php
+<!DOCTYPE html>
+<html lang="en">
+<?php
 include("../connection/connect.php");
 error_reporting(0);
 session_start();
 
+if(empty($_SESSION["adm_id"])) {
+    header('location:index.php');
+} else {
 
+if(isset($_POST['submit'])) {
+    if(empty($_POST['d_name'])||empty($_POST['about'])||$_POST['price']==''||$_POST['res_name']=='') {
+        $error = '<div class="alert alert-danger">Vui lòng điền đầy đủ thông tin!</div>';
+    } else {
+        $fname = $_FILES['file']['name'];
+        $temp = $_FILES['file']['tmp_name'];
+        $fsize = $_FILES['file']['size'];
+        $extension = explode('.',$fname);
+        $extension = strtolower(end($extension));  
+        $fnew = uniqid().'.'.$extension;
+        $store = "Res_img/dishes/".basename($fnew);                    
 
-
-if(isset($_POST['submit']))          
-{
-	
-			
-		
-			
-		  
-		
-		
-		if(empty($_POST['d_name'])||empty($_POST['about'])||$_POST['price']==''||$_POST['res_name']=='')
-		{	
-											$error = 	'<div class="alert alert-danger alert-dismissible fade show">
-																<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-																<strong>All fields Must be Fillup!</strong>
-															</div>';
-									
-		
-								
-		}
-	else
-		{
-		
-				$fname = $_FILES['file']['name'];
-								$temp = $_FILES['file']['tmp_name'];
-								$fsize = $_FILES['file']['size'];
-								$extension = explode('.',$fname);
-								$extension = strtolower(end($extension));  
-								$fnew = uniqid().'.'.$extension;
-   
-								$store = "Res_img/dishes/".basename($fnew);                    
-	
-					if($extension == 'jpg'||$extension == 'png'||$extension == 'gif' )
-					{        
-									if($fsize>=1000000)
-										{
-		
-		
-												$error = 	'<div class="alert alert-danger alert-dismissible fade show">
-																<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-																<strong>Max Image Size is 1024kb!</strong> Try different Image.
-															</div>';
-	   
-										}
-		
-									else
-										{
-												
-												
-												
-				                                 
-												$sql = "INSERT INTO dishes(rs_id,title,slogan,price,img) VALUE('".$_POST['res_name']."','".$_POST['d_name']."','".$_POST['about']."','".$_POST['price']."','".$fnew."')";  // store the submited data ino the database :images
-												mysqli_query($db, $sql); 
-												move_uploaded_file($temp, $store);
-			  
-													$success = 	'<div class="alert alert-success alert-dismissible fade show">
-																<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-																 New Dish Added Successfully.
-															</div>';
-                
-	
-										}
-					}
-					elseif($extension == '')
-					{
-						$error = 	'<div class="alert alert-danger alert-dismissible fade show">
-																<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-																<strong>select image</strong>
-															</div>';
-					}
-					else{
-					
-											$error = 	'<div class="alert alert-danger alert-dismissible fade show">
-																<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-																<strong>invalid extension!</strong>png, jpg, Gif are accepted.
-															</div>';
-						
-	   
-						}               
-	   
-	   
-	   }
-
-
-
-	
-	
-	
-
+        if($extension == 'jpg'||$extension == 'png'||$extension == 'gif') {
+            if($fsize >= 1000000) {
+                $error = '<div class="alert alert-danger">Kích thước ảnh tối đa là 1MB!</div>';
+            } else {
+                $sql = "INSERT INTO dishes(rs_id,title,slogan,price,img) VALUE(?,?,?,?,?)";
+                $stmt = mysqli_prepare($db, $sql);
+                mysqli_stmt_bind_param($stmt, "issss", $_POST['res_name'], $_POST['d_name'], $_POST['about'], $_POST['price'], $fnew);
+                mysqli_stmt_execute($stmt);
+                move_uploaded_file($temp, $store);
+                $success = '<div class="alert alert-success">Thêm món ăn thành công!</div>';
+            }
+        } else {
+            $error = '<div class="alert alert-danger">Chỉ chấp nhận file jpg, png, gif!</div>';
+        }
+    }
 }
-
 ?>
-
-
-                <head>
-                    <meta charset="utf-8">
-                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <meta name="description" content="">
-                    <meta name="author" content="">
-                    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
-                    <title>Add Menu</title>
-                    <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-                    <link href="css/helper.css" rel="stylesheet">
-                    <link href="css/style.css" rel="stylesheet">
-                </head>
-
-                <body class="fix-header">
-
-                    <div class="preloader">
-                        <svg class="circular" viewBox="25 25 50 50">
-                            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
-                        </svg>
-                    </div>
-
-                    <div id="main-wrapper">
-
-                        <div class="header">
-                            <nav class="navbar top-navbar navbar-expand-md navbar-light">
-                                <div class="navbar-header">
-                                    <a class="navbar-brand" href="dashboard.php">
-
-                                    <span><img width="80px" src="images/logo.png" alt="homepage" class="dark-logo" /></span>                                    </a>
-                                </div>
-                                <div class="navbar-collapse">
-
-                                    <ul class="navbar-nav mr-auto mt-md-0">
-
-
-
-
-                                    </ul>
-
-                                    <ul class="navbar-nav my-lg-0">
-
-                        
-
-
-                                        <li class="nav-item dropdown">
-
-                                            <div class="dropdown-menu dropdown-menu-right mailbox animated zoomIn">
-                                                <ul>
-                                                    <li>
-                                                        <div class="drop-title">Thông báo</div>
-                                                    </li>
-
-                                                    <li>
-                                                        <a class="nav-link text-center" href="javascript:void(0);"> <strong>Kiểm tra tất cả thông báo</strong> <i class="fa fa-angle-right"></i> </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                        
-
-                                        <li class="nav-item dropdown">
-                                            <a class="nav-link dropdown-toggle text-muted  " href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="images/bookingSystem/logot.jpg" alt="user" class="profile-pic" /></a>
-                                            <div class="dropdown-menu dropdown-menu-right animated zoomIn">
-                                                <ul class="dropdown-user">
-                                                    <li><a href="logout.php"><i class="fa fa-power-off"></i> Đăng xuất</a></li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </nav>
-                        </div>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thêm món ăn</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+        }
         
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+        }
+        
+        .sidebar-link {
+            color: rgba(255,255,255,.8);
+            padding: 1rem;
+            display: block;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .sidebar-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
 
+        .card {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
 
-                        <div class="left-sidebar">
+        .navbar {
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
+    </style>
+</head>
 
-            <div class="scroll-sidebar">
-            
-
-                <nav class="sidebar-nav">
-                    <ul id="sidebarnav">
-                        <li class="nav-devider"></li>
-                        <li class="nav-label">Trang chính</li>
-                        <li> <a href="dashboard.php"><i class="fa fa-tachometer"></i><span>Tổng quan</span></a>
-                        </li>
-                        <li class="nav-label">Log</li>
-                        <li> <a href="all_users.php"> <span><i class="fa fa-user f-s-20 "></i></span><span>Người dùng</span></a></li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-archive f-s-20 color-warning"></i><span class="hide-menu">Nhà hàng</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_restaurant.php">Nhà hàng</a></li>
-                                <li><a href="add_category.php">Thêm sản phẩm</a></li>
-                                <li><a href="add_restaurant.php">Thêm nhà hàng</a></li>
-
-                            </ul>
-                        </li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-cutlery" aria-hidden="true"></i><span class="hide-menu">Menu</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_menu.php">All Menu</a></li>
-                                <li><a href="add_menu.php">Add Menu</a></li>
-
-                            
-
-                            </ul>
-                        </li>
-                        <li> <a href="all_orders.php"><i class="fa fa-shopping-cart" aria-hidden="true"></i><span>Đơn hàng</span></a></li>
-
-                    </ul>
-                </nav>
-
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar text-white" style="width: 250px;">
+            <div class="p-3">
+                <img src="images/logo.png" alt="Logo" class="img-fluid" style="max-width: 150px;">
             </div>
-
+            
+            <div class="nav flex-column">
+                <a href="dashboard.php" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+                </a>
+                <a href="all_users.php" class="sidebar-link">
+                    <i class="fas fa-users me-2"></i> Người dùng
+                </a>
+                <a href="all_restaurant.php" class="sidebar-link">
+                    <i class="fas fa-store me-2"></i> Nhà hàng
+                </a>
+                <a href="all_menu.php" class="sidebar-link active">
+                    <i class="fas fa-utensils me-2"></i> Menu
+                </a>
+                <a href="all_orders.php" class="sidebar-link">
+                    <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                </a>
+            </div>
         </div>
 
-        <div class="page-wrapper">
+        <!-- Main Content -->
+        <div class="flex-grow-1">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center">
+                        <a href="all_menu.php" class="btn btn-link text-decoration-none me-3">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <h4 class="mb-0">Thêm món ăn mới</h4>
+                    </div>
+                    <div class="dropdown">
+                        <a class="btn btn-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <img src="images/bookingSystem/logot.jpg" alt="Profile" class="rounded-circle" width="32">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="logout.php">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
 
-        
-            <div style="padding-top: 10px;">
-                <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="#">ONLINE FOOD HQ</a> - HỌC VIỆN QUẢN LÝ GIÁO DỤC.</marquee>
-            </div>
-
-
-            
-
-                            <div class="container-fluid">
-                                <!-- Start Page Content -->
-
-
-                                <?php  echo $error;
-									        echo $success; ?>
-
-
-                
-
-
-                                <div class="col-lg-12">
-                                    <div class="card card-outline-primary">
-                                        <div class="card-header">
-                                            <h4 class="m-b-0 text-white">Thêm món</h4>
-                                        </div>
-                                        <div class="card-body">
-                                            <form action='' method='post' enctype="multipart/form-data">
-                                                <div class="form-body">
-
-                                                    <hr>
-                                                    <div class="row p-t-20">
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="control-label">Tên món</label>
-                                                                <input type="text" name="d_name" class="form-control">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="form-group has-danger">
-                                                                <label class="control-label">Mô tả</label>
-                                                                <input type="text" name="about" class="form-control form-control-danger">
-                                                            </div>
-                                                        </div>
-
-                                                    </div>
-                                    
-
-                                                    <div class="row p-t-20">
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="control-label">Giá </label>
-                                                                <input type="text" name="price" class="form-control" placeholder="VND">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="form-group has-danger">
-                                                                <label class="control-label">Ảnh</label>
-                                                                <input type="file" name="file" id="lastName" class="form-control form-control-danger" placeholder="12n">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-
-
-                                                    <div class="row">
-
-
-
-                                        
-
-
-
-
-                                                        <div class="col-md-12">
-                                                            <div class="form-group">
-                                                                <label class="control-label">Chọn nhà hàng</label>
-                                                                <select name="res_name" class="form-control custom-select" data-placeholder="Choose a Category" tabindex="1">
-                                                                    <option>--Lựa chọn nhà hàng--</option>
-                                                                    <?php $ssql ="select * from restaurant";
-													$res=mysqli_query($db, $ssql); 
-													while($row=mysqli_fetch_array($res))  
-													{
-                                                       echo' <option value="'.$row['rs_id'].'">'.$row['title'].'</option>';;
-													}  
-                                                 
-													?>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-
-
-                                                    </div>
-
-                                                </div>
-                                
-
-                                        </div>
-                                        <div class="form-actions">
-                                            <input type="submit" name="submit" class="btn btn-primary" value="Lưu">
-                                            <a href="add_menu.php" class="btn btn-inverse">Hủy</a>
-                                        </div>
-                                        </form>
+            <!-- Content -->
+            <div class="container-fluid p-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Thông tin món ăn</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php echo $error; echo $success; ?>
+                        <form action="" method="post" enctype="multipart/form-data">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nhà hàng</label>
+                                        <select name="res_name" class="form-select" required>
+                                            <option value="">Chọn nhà hàng</option>
+                                            <?php 
+                                            $sql = "SELECT * FROM restaurant ORDER BY title";
+                                            $res = mysqli_query($db, $sql);
+                                            while($row = mysqli_fetch_array($res)) {
+                                                echo '<option value="'.$row['rs_id'].'">'.$row['title'].'</option>';
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
-                    
+                                </div>
 
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên món</label>
+                                        <input type="text" name="d_name" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mô tả</label>
+                                        <textarea name="about" class="form-control" rows="3" required></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Giá</label>
+                                        <div class="input-group">
+                                            <input type="number" name="price" class="form-control" required>
+                                            <span class="input-group-text">VNĐ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Hình ảnh</label>
+                                        <input type="file" name="file" class="form-control" required accept="image/*">
+                                        <div class="form-text">Chấp nhận: JPG, PNG, GIF. Tối đa 1MB</div>
+                                    </div>
                                 </div>
                             </div>
-                            <?php include "include/footer.php" ?>
-                        </div>
-                    </div>
-                    </div>
-                    </div>
 
-                    <script src="js/lib/jquery/jquery.min.js"></script>
-                    <script src="js/lib/bootstrap/js/popper.min.js"></script>
-                    <script src="js/lib/bootstrap/js/bootstrap.min.js"></script>
-                    <script src="js/jquery.slimscroll.js"></script>
-                    <script src="js/sidebarmenu.js"></script>
-                    <script src="js/lib/sticky-kit-master/dist/sticky-kit.min.js"></script>
-                    <script src="js/custom.min.js"></script>
-    
+                            <div class="text-end mt-4">
+                                <button type="submit" name="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Lưu
+                                </button>
+                                <a href="all_menu.php" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Hủy
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                </body>
-
-                </html>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+<?php } ?>

@@ -1,233 +1,317 @@
-
-                <!DOCTYPE html>
-                <html lang="en">
-                <?php
+<?php
 include("../connection/connect.php");
 error_reporting(0);
 session_start();
-
+if(empty($_SESSION["adm_id"])) {
+    header('location:index.php');
+} else {
 ?>
-
-                <head>
-                    <meta charset="utf-8">
-                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <meta name="description" content="">
-                    <meta name="author" content="">
-                    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
-                    <title>All Menu</title>
-                    <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-                    <link href="css/helper.css" rel="stylesheet">
-                    <link href="css/style.css" rel="stylesheet">
-                </head>
-
-
-                <body class="fix-header fix-sidebar">
-
-                    <div class="preloader">
-                        <svg class="circular" viewBox="25 25 50 50">
-                            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
-                        </svg>
-                    </div>
-
-                    <div id="main-wrapper">
-
-                        <div class="header">
-                            <nav class="navbar top-navbar navbar-expand-md navbar-light">
-                                <div class="navbar-header">
-                                    <a class="navbar-brand" href="dashboard.php">
-
-                                    <span><img width="80px" src="images/logo.png" alt="homepage" class="dark-logo" /></span>                                    </a>
-                                </div>
-                                <div class="navbar-collapse">
-
-                                    <ul class="navbar-nav mr-auto mt-md-0">
-
-                                    </ul>
-
-                                    <ul class="navbar-nav my-lg-0">
-
-
-
-                                        <li class="nav-item dropdown">
-
-                                            <div class="dropdown-menu dropdown-menu-right mailbox animated zoomIn">
-                                                <ul>
-                                                    <li>
-                                                        <div class="drop-title">Thông báo</div>
-                                                    </li>
-
-                                                    <li>
-                                                        <a class="nav-link text-center" href="javascript:void(0);"> <strong>Kiểm tra tất cả thông báo</strong> <i class="fa fa-angle-right"></i> </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                        
-
-                                        <li class="nav-item dropdown">
-                                            <a class="nav-link dropdown-toggle text-muted  " href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="images/bookingSystem/logot.jpg" alt="user" class="profile-pic" /></a>
-                                            <div class="dropdown-menu dropdown-menu-right animated zoomIn">
-                                                <ul class="dropdown-user">
-                                                    <li><a href="logout.php"><i class="fa fa-power-off"></i> Đăng xuất</a></li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </nav>
-                        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý menu</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+        }
         
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+        }
+        
+        .sidebar-link {
+            color: rgba(255,255,255,.8);
+            padding: 1rem;
+            display: block;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .sidebar-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
 
-                        <div class="left-sidebar">
+        .card {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
 
-            <div class="scroll-sidebar">
-            
+        .navbar {
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
+    </style>
+</head>
 
-                <nav class="sidebar-nav">
-                    <ul id="sidebarnav">
-                        <li class="nav-devider"></li>
-                        <li class="nav-label">Trang chính</li>
-                        <li> <a href="dashboard.php"><i class="fa fa-tachometer"></i><span>Tổng quan</span></a>
-                        </li>
-                        <li class="nav-label">Log</li>
-                        <li> <a href="all_users.php"> <span><i class="fa fa-user f-s-20 "></i></span><span>Người dùng</span></a></li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-archive f-s-20 color-warning"></i><span class="hide-menu">Nhà hàng</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_restaurant.php">Nhà hàng</a></li>
-                                <li><a href="add_category.php">Thêm sản phẩm</a></li>
-                                <li><a href="add_restaurant.php">Thêm nhà hàng</a></li>
-
-                            </ul>
-                        </li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-cutlery" aria-hidden="true"></i><span class="hide-menu">Menu</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_menu.php">All Menu</a></li>
-                                <li><a href="add_menu.php">Add Menu</a></li>
-
-                            
-
-                            </ul>
-                        </li>
-                        <li> <a href="all_orders.php"><i class="fa fa-shopping-cart" aria-hidden="true"></i><span>Đơn hàng</span></a></li>
-
-                    </ul>
-                </nav>
-
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar text-white" style="width: 250px;">
+            <div class="p-3">
+                <img src="images/logo.png" alt="Logo" class="img-fluid" style="max-width: 150px;">
             </div>
-
+            
+            <div class="nav flex-column">
+                <a href="dashboard.php" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+                </a>
+                <a href="all_users.php" class="sidebar-link">
+                    <i class="fas fa-users me-2"></i> Người dùng
+                </a>
+                <a href="all_restaurant.php" class="sidebar-link">
+                    <i class="fas fa-store me-2"></i> Nhà hàng
+                </a>
+                <a href="all_menu.php" class="sidebar-link active">
+                    <i class="fas fa-utensils me-2"></i> Menu
+                </a>
+                <a href="all_orders.php" class="sidebar-link">
+                    <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                </a>
+                 <a href="all_restaurant_admin.php" class="sidebar-link">
+                    <i class="fas fa-user-cog me-2"></i> Quản lý Admin nhà hàng
+                </a>
+            </div>
         </div>
 
-        <div class="page-wrapper">
+        <!-- Main Content -->
+        <div class="flex-grow-1">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white">
+                <div class="container-fluid">
+                    <h4 class="mb-0">Quản lý menu</h4>
+                    <div class="dropdown">
+                        <a class="btn btn-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <img src="images/bookingSystem/logot.jpg" alt="Profile" class="rounded-circle" width="32">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="logout.php">Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
 
-        
-            <div style="padding-top: 10px;">
-                <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="#">ONLINE FOOD HQ</a> - HỌC VIỆN QUẢN LÝ GIÁO DỤC.</marquee>
-            </div>
-         <div class="container-fluid">
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="col-lg-12">
-                        <div class="card card-outline-primary">
-                            <div class="card-header">
-                                <h4 class="m-b-0 text-white">All Menu</h4>
-                            </div>
-
-
-                            <div class="table-responsive m-t-40">
-                                <table id="example23" class="display nowrap table table-hover table-striped table-bordered" cellspacing="0" width="100%">
-                                    <thead class="thead-dark">
-                                        <tr>
-                                            <th>Nhà hàng</th>
-                                            <th>Món ăn</th>
-                                            <th>Mô tả</th>
-                                            <th>Giá</th>
-                                            <th>HÌnh ảnh</th>
-                                            <th>Hành động</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        
-
-
-                                        <?php
-                            $sql="SELECT * FROM dishes order by d_id desc";
-                            $query=mysqli_query($db,$sql);
-                            
-                                if(!mysqli_num_rows($query) > 0 )
-                                    {
-                                        echo '<td colspan="11"><center>No Menu</center></td>';
+            <!-- Content -->
+            <div class="container-fluid p-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Danh sách món ăn</h5>
+                        <a href="add_menu.php" class="btn btn-light">
+                            <i class="fas fa-plus me-2"></i>Thêm món
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="menuTable" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nhà hàng</th>
+                                        <th>Món ăn</th>
+                                        <th>Mô tả</th>
+                                        <th>Giá</th>
+                                        <th>Hình ảnh</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $sql = "SELECT d.*, r.title as restaurant_name 
+                                           FROM dishes d 
+                                           LEFT JOIN restaurant r ON d.rs_id = r.rs_id 
+                                           ORDER BY d.d_id DESC";
+                                    $query = mysqli_query($db, $sql);
+                                    
+                                    if(!mysqli_num_rows($query) > 0) {
+                                        echo '<tr><td colspan="6" class="text-center">Không có dữ liệu</td></tr>';
+                                    } else {
+                                        while($rows = mysqli_fetch_array($query)) {
+                                            echo '<tr>
+                                                <td>'.$rows['restaurant_name'].'</td>
+                                                <td>'.$rows['title'].'</td>
+                                                <td>'.$rows['slogan'].'</td>
+                                                <td>'.number_format($rows['price'], 0, ',', '.').' VNĐ</td>
+                                                <td>
+                                                    <img src="Res_img/dishes/'.$rows['img'].'" class="img-thumbnail" style="max-height:80px">
+                                                </td>
+                                                <td>
+                                                    <a href="#" class="btn btn-primary btn-sm edit-menu" data-id="'.$rows['d_id'].'">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="delete_menu.php?menu_del='.$rows['d_id'].'" class="btn btn-danger btn-sm" 
+                                                       onclick="return confirm(\'Bạn có chắc muốn xóa món ăn này?\')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>';
+                                        }
                                     }
-                                else
-                                    {				
-                                        while($rows=mysqli_fetch_array($query))
-                                            {
-                                                    $mql="select * from restaurant where rs_id='".$rows['rs_id']."'";
-                                                    $newquery=mysqli_query($db,$mql);
-                                                    $fetch=mysqli_fetch_array($newquery);
-                                                    
-                                                    
-                                                        echo '<tr><td>'.$fetch['title'].'</td>
-                                                        
-                                                                    <td>'.$rows['title'].'</td>
-                                                                    <td>'.$rows['slogan'].'</td>
-                                                                    <td>' . number_format($rows['price'], 0, ',', '.') . ' VND</td>
-                                                                    
-                                                                    
-                                                                    <td><div class="col-md-3 col-lg-8 m-b-10">
-                                                                    <center><img src="Res_img/dishes/'.$rows['img'].'" class="img-responsive  radius" style="max-height:100px;max-width:150px;" /></center>
-                                                                    </div></td>
-                                                                    
-                                                                
-                                                                            <td><a href="delete_menu.php?menu_del='.$rows['d_id'].'" class="btn btn-danger btn-flat btn-addon btn-xs m-b-10"><i class="fa fa-trash-o" style="font-size:16px"></i></a> 
-                                                                            <a href="update_menu.php?menu_upd='.$rows['d_id'].'" class="btn btn-info btn-flat btn-addon btn-sm m-b-10 m-l-5"><i class="fa fa-edit"></i></a>
-                                                                        </td></tr>';
-                                                                    
-                                                                    
-                                                                    
-                                                    }	
-                                    }
-                            
-                        
-                        ?>
-
-                                    </tbody>
-                                </table>
-                            </div>
+                                    ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Edit Menu Modal -->
+    <div class="modal fade" id="editMenuModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Cập nhật món ăn</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editMenuForm" method="post" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Nhà hàng</label>
+                                    <select name="res_name" class="form-select" required></select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Tên món</label>
+                                    <input type="text" name="d_name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Mô tả</label>
+                                    <textarea name="about" class="form-control" rows="3" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Giá</label>
+                                    <input type="number" name="price" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Hình ảnh</label>
+                                    <input type="file" name="file" class="form-control">
+                                    <div id="currentImage" class="mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="menu_id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="saveMenu">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <?php  include "include/footer.php"?>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#menuTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+                }
+            });
 
-    </div>
+            // Handle edit button click
+            $(document).on('click', '.edit-menu', function(e) {
+                e.preventDefault();
+                const id = $(this).data('id');
+                
+                // Load restaurants first
+                $.ajax({
+                    url: 'get_restaurants.php',
+                    type: 'GET',
+                    success: function(restaurants) {
+                        // Populate restaurant dropdown
+                        let options = '<option value="">Chọn nhà hàng</option>';
+                        restaurants.forEach(rest => {
+                            options += `<option value="${rest.rs_id}">${rest.title}</option>`;
+                        });
+                        $('select[name="res_name"]').html(options);
+                        
+                        // Then load menu item details
+                        $.ajax({
+                            url: 'get_menu_item.php',
+                            type: 'GET',
+                            data: {id: id},
+                            success: function(response) {
+                                const data = JSON.parse(response);
+                                
+                                // Fill form data
+                                $('select[name="res_name"]').val(data.rs_id);
+                                $('input[name="d_name"]').val(data.title);
+                                $('textarea[name="about"]').val(data.slogan);
+                                $('input[name="price"]').val(data.price);
+                                $('input[name="menu_id"]').val(data.d_id);
+                                
+                                if(data.img) {
+                                    $('#currentImage').html(`
+                                        <img src="Res_img/dishes/${data.img}" 
+                                             class="img-thumbnail" 
+                                             style="max-height:100px">
+                                    `);
+                                }
+                                
+                                // Show modal after data is loaded
+                                $('#editMenuModal').modal('show');
+                            },
+                            error: function(xhr, status, error) {
+                                alert('Không thể tải thông tin món ăn: ' + error);
+                            }
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Không thể tải danh sách nhà hàng: ' + error);
+                    }
+                });
+            });
 
-
-    </div>
-
-    <script src="js/lib/jquery/jquery.min.js"></script>
-    <script src="js/lib/bootstrap/js/popper.min.js"></script>
-    <script src="js/lib/bootstrap/js/bootstrap.min.js"></script>
-    <script src="js/jquery.slimscroll.js"></script>
-    <script src="js/sidebarmenu.js"></script>
-    <script src="js/lib/sticky-kit-master/dist/sticky-kit.min.js"></script>
-    <script src="js/custom.min.js"></script>
-    <script src="js/lib/datatables/datatables.min.js"></script>
-    <script src="js/lib/datatables/cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
-    <script src="js/lib/datatables/cdn.datatables.net/buttons/1.2.2/js/buttons.flash.min.js"></script>
-    <script src="js/lib/datatables/cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-    <script src="js/lib/datatables/cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
-    <script src="js/lib/datatables/cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
-    <script src="js/lib/datatables/cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js"></script>
-    <script src="js/lib/datatables/datatables-init.js"></script>
+            // Handle save changes
+            $('#saveMenu').click(function() {
+                const form = $('#editMenuForm')[0];
+                const formData = new FormData(form);
+                
+                $.ajax({
+                    url: 'update_menu_ajax.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        const result = JSON.parse(response);
+                        if(result.success) {
+                            $('#editMenuModal').modal('hide');
+                            location.reload();
+                            alert('Cập nhật thành công!');
+                        } else {
+                            alert('Có lỗi xảy ra: ' + result.message);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
-
 </html>
+<?php } ?>

@@ -4,307 +4,380 @@
 include("../connection/connect.php");
 error_reporting(0);
 session_start();
-if(empty($_SESSION["adm_id"]))
-{
-	header('location:index.php');
-}
-else
-{
+if(empty($_SESSION["adm_id"])) {
+    header('location:index.php');
+} else {
 ?>
-
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <title>Admin Panel</title>
-    <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="css/helper.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <title>Admin Dashboard</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+        }
+        
+        .sidebar-link {
+            color: rgba(255,255,255,.8);
+            padding: 1rem;
+            display: block;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
+
+        .stat-card {
+            border-radius: 0.5rem;
+            border: none;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .navbar {
+            box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
+        }
+    </style>
 </head>
 
-<body class="fix-header">
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar text-white" style="width: 250px;">
+            <div class="p-3">
+                <img src="images/logo.png" alt="Logo" class="img-fluid" style="max-width: 150px;">
+            </div>
+            
+            <div class="nav flex-column">
+                <a href="dashboard.php" class="sidebar-link active">
+                    <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+                </a>
+                <a href="all_users.php" class="sidebar-link">
+                    <i class="fas fa-users me-2"></i> Người dùng
+                </a>
+                <a href="all_restaurant.php" class="sidebar-link">
+                    <i class="fas fa-store me-2"></i> Nhà hàng
+                </a>
+                <a href="all_menu.php" class="sidebar-link">
+                    <i class="fas fa-utensils me-2"></i> Menu
+                </a>
+                <a href="all_orders.php" class="sidebar-link">
+                    <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                </a>
+                <a href="all_restaurant_admin.php" class="sidebar-link">
+                    <i class="fas fa-user-cog me-2"></i> Quản lý Admin nhà hàng
+                </a>
+            </div>
+        </div>
 
-    <div class="preloader">
-        <svg class="circular" viewBox="25 25 50 50">
-            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
-        </svg>
-    </div>
-
-    <div id="main-wrapper">
-
-        <div class="header">
-            <nav class="navbar top-navbar navbar-expand-md navbar-light">
-
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="dashboard.php">
-
-                        <span><img width="80px" src="images/logo.png" alt="homepage" class="dark-logo" /></span>
-                    </a>
-                </div>
-
-                <div class="navbar-collapse">
-                    <ul class="navbar-nav mr-auto mt-md-0">
-                    </ul>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-muted  " href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="images/bookingSystem/logot.jpg" alt="user" class="profile-pic" /></a>
-                        <div class="dropdown-menu dropdown-menu-right animated zoomIn">
-                            <ul class="dropdown-user">
-                                <li><a href="logout.php"><i class="fa fa-power-off"></i> Logout</a></li>
-                            </ul>
-                        </div>
-                    </li>
-                    </ul>
+        <!-- Main Content -->
+        <div class="flex-grow-1">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white">
+                <div class="container-fluid">
+                    <div>
+                        <h4 class="mb-0">Dashboard</h4>
+                    </div>
+                    <div class="dropdown">
+                        <a class="btn btn-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <img src="images/bookingSystem/logot.jpg" alt="Profile" class="rounded-circle" width="32">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="logout.php">Đăng xuất</a></li>
+                        </ul>
+                    </div>
                 </div>
             </nav>
-        </div>
 
-        <div class="left-sidebar">
-
-            <div class="scroll-sidebar">
-            
-
-                <nav class="sidebar-nav">
-                    <ul id="sidebarnav">
-                        <li class="nav-devider"></li>
-                        <li class="nav-label">Trang chính</li>
-                        <li> <a href="dashboard.php"><i class="fa fa-tachometer"></i><span>Tổng quan</span></a>
-                        </li>
-                        <li class="nav-label">Log</li>
-                        <li> <a href="all_users.php"> <span><i class="fa fa-user f-s-20 "></i></span><span>Người dùng</span></a></li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-archive f-s-20 color-warning"></i><span class="hide-menu">Nhà hàng</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_restaurant.php">Nhà hàng</a></li>
-                                <li><a href="add_category.php">Thêm sản phẩm</a></li>
-                                <li><a href="add_restaurant.php">Thêm nhà hàng</a></li>
-
-                            </ul>
-                        </li>
-                        <li> <a class="has-arrow  " href="#" aria-expanded="false"><i class="fa fa-cutlery" aria-hidden="true"></i><span class="hide-menu">Menu</span></a>
-                            <ul aria-expanded="false" class="collapse">
-                                <li><a href="all_menu.php">All Menu</a></li>
-                                <li><a href="add_menu.php">Add Menu</a></li>
-
-                            
-
-                            </ul>
-                        </li>
-                        <li> <a href="all_orders.php"><i class="fa fa-shopping-cart" aria-hidden="true"></i><span>Đơn hàng</span></a></li>
-
-                    </ul>
-                </nav>
-
-            </div>
-
-        </div>
-
-        <div class="page-wrapper">
-
-        
-            <div style="padding-top: 10px;">
-                <marquee onMouseOver="this.stop()" onMouseOut="this.start()"> <a href="#">ONLINE FOOD HQ</a> - HỌC VIỆN QUẢN LÝ GIÁO DỤC.</marquee>
-            </div>
-
-            <div class="container-fluid">
-                <div class="col-lg-12">
-                    <div class="card card-outline-primary">
-                        <div class="card-header">
-                            <h4 class="m-b-0 text-white">Admin Dashboard</h4>
-                        </div>
-                        <div class="row">
-
-                            <div class="col-md-3">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-home f-s-40 "></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from restaurant";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Nhà hàng</p>
-                                        </div>
+            <!-- Content -->
+            <div class="container-fluid p-4">
+                <!-- Stats Row 1 -->
+                <div class="row g-4 mb-4">
+                    <!-- Nhà hàng -->
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-primary bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Nhà hàng</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from restaurant";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-cutlery f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from dishes";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Món ăn</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        
-
-                            <div class="col-md-3">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-users f-s-40"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from users";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Khách hàng</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        
-
-                            <div class="col-md-3">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-shopping-cart f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from users_orders";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Đơn hàng</p>
-                                        </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-store text-white fs-4"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-th-large f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from res_category";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Phân loại nhà hàng</p>
-                                        </div>
+                    <!-- Món ăn -->
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-success bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Món ăn</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from dishes";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
                                     </div>
-                                </div>
-                            </div>
-                        
-
-                            <div class="col-md-4">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-spinner f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from users_orders WHERE status = 'in process' ";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Đơn treo</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-check f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from users_orders WHERE status = 'closed' ";
-												$result=mysqli_query($db,$sql); 
-													$rws=mysqli_num_rows($result);
-													
-													echo $rws;?></h2>
-                                            <p class="m-b-0">Đơn hàng đã hoàn thành</p>
-                                        </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-utensils text-white fs-4"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="card p-30">
-                                    <div class="media">
-                                        <div class="media-left meida media-middle">
-                                            <span><i class="fa fa-times f-s-40" aria-hidden="true"></i></span>
-                                        </div>
-                                        <div class="media-body media-text-right">
-                                            <h2><?php $sql="select * from users_orders WHERE status = 'rejected' ";
-                                        $result=mysqli_query($db,$sql); 
-                                            $rws=mysqli_num_rows($result);
-                                            
-                                            echo $rws;?></h2>
-                                            <p class="m-b-0">Đơn hủy</p>
-                                        </div>
+                    <!-- Khách hàng -->
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-info bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Khách hàng</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from users";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
+                                    </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-users text-white fs-4"></i>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="col-md-4">
-                            <div class="col-md-4">
-    <div class="card p-30">
-        <div class="media">
-            <div class="media-left meida media-middle">
-                <span><i class="fa fa-usd f-s-40" aria-hidden="true"></i></span>
-            </div>
-            <div class="media-body media-text-right">
-            <h2>
-    <?php 
-        $result = mysqli_query($db, 'SELECT COALESCE(SUM(price * quantity), 0) AS value_sum FROM users_orders WHERE status = "closed"'); 
-        $row = mysqli_fetch_assoc($result); 
-        $sum = number_format($row['value_sum'], 0, ',', '.');
-        echo $sum;
-    ?> VNĐ
-</h2>
+                    <!-- Đơn hàng -->
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-warning bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Đơn hàng</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from users_orders";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
+                                    </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-shopping-cart text-white fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <p class="m-b-0" style="text-align:center;"><a href="restaurant_earnings.php">Thu nhập theo nhà hàng</a></p>
-            </div>
-        </div>
-    </div>
-</div>
+                <!-- Stats Row 2 -->
+                <div class="row g-4 mb-4">
+                    <!-- Phân loại -->
+                    <div class="col-md-4">
+                        <div class="card stat-card bg-purple bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Phân loại nhà hàng</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from res_category";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
+                                    </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-th-large text-white fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Đơn treo -->
+                    <div class="col-md-4">
+                        <div class="card stat-card bg-orange bg-gradient h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-white text-opacity-75 mb-1">Đơn treo</p>
+                                        <h3 class="text-white mb-0">
+                                            <?php 
+                                            $sql="select * from users_orders WHERE status = 'in process'";
+                                            $result=mysqli_query($db,$sql); 
+                                            echo mysqli_num_rows($result);
+                                            ?>
+                                        </h3>
+                                    </div>
+                                    <div class="stat-icon bg-white bg-opacity-25 rounded-circle p-3">
+                                        <i class="fas fa-spinner text-white fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Doanh thu -->
+                    <div class="col-md-6">
+                        <div class="card stat-card h-100" style="background: #2eaa7c;">
+                            <div class="card-body">
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-white">Doanh thu đã thu</span>
+                                        <div class="rounded-circle bg-white bg-opacity-25 p-3">
+                                            <i class="fas fa-money-bill-wave text-white"></i>
+                                        </div>
+                                    </div>
+                                    <h2 class="text-white mt-3 mb-2">
+                                        <?php 
+                                        $total_earnings = mysqli_query($db, 'SELECT COALESCE(SUM(price * quantity), 0) AS total FROM users_orders WHERE status = "closed"');
+                                        $total_row = mysqli_fetch_assoc($total_earnings);
+                                        echo number_format($total_row['total'], 0, ',', '.') . ' VNĐ';
+                                        ?>
+                                    </h2>
+                                    <a href="restaurant_earnings.php" class="text-white text-decoration-none">
+                                        Chi tiết <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card stat-card h-100" style="background: #ffc107;">
+                            <div class="card-body">
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-white">Doanh thu chờ thu</span>
+                                        <div class="rounded-circle bg-white bg-opacity-25 p-3">
+                                            <i class="fas fa-clock text-white"></i>
+                                        </div>
+                                    </div>
+                                    <h2 class="text-white mt-3 mb-2">
+                                        <?php 
+                                        $pending_earnings = mysqli_query($db, 'SELECT COALESCE(SUM(price * quantity), 0) AS pending FROM users_orders WHERE status = "in process"');
+                                        $pending_row = mysqli_fetch_assoc($pending_earnings);
+                                        echo number_format($pending_row['pending'], 0, ',', '.') . ' VNĐ';
+                                        ?>
+                                    </h2>
+                                    <span class="text-white">
+                                        Từ <?php echo mysqli_num_rows(mysqli_query($db, "SELECT * FROM users_orders WHERE status = 'in process'")); ?> đơn hàng
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Row 2 -->
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Thống kê doanh thu</h5>
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Đơn hàng gần đây</h5>
+                                <div class="list-group list-group-flush">
+                                    <?php
+                                    $sql = "SELECT * FROM users_orders ORDER BY date DESC LIMIT 5";
+                                    $result = mysqli_query($db, $sql);
+                                    while($row = mysqli_fetch_assoc($result)) {
+                                        echo '<div class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Đơn #'.$row['o_id'].'</span>
+                                                <span class="badge bg-'.($row['status']=='closed'?'success':'warning').'">
+                                                    '.$row['status'].'</span>
+                                            </div>
+                                        </div>';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <?php include "include/footer.php" ?>
-
-            <script src="js/lib/jquery/jquery.min.js"></script>
-            <script src="js/lib/bootstrap/js/popper.min.js"></script>
-            <script src="js/lib/bootstrap/js/bootstrap.min.js"></script>
-            <script src="js/jquery.slimscroll.js"></script>
-            <script src="js/sidebarmenu.js"></script>
-            <script src="js/lib/sticky-kit-master/dist/sticky-kit.min.js"></script>
-            <script src="js/custom.min.js"></script>
-
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Chart configuration
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: [12, 19, 3, 5, 2, 3, 7],
+                    borderColor: '#4e73df',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    </script>
 </body>
-
 </html>
-<?php
-}
-?>
+<?php } ?>
