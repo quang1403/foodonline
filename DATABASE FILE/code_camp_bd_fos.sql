@@ -324,3 +324,33 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+CREATE TABLE restaurant_admin (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    rs_id INT NOT NULL,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (rs_id) REFERENCES restaurant(rs_id)
+);
+-- First remove any existing foreign key constraints
+ALTER TABLE users_orders 
+DROP FOREIGN KEY IF EXISTS users_orders_rs_id_fk;
+
+-- Check if rs_id column exists and remove if it does
+ALTER TABLE users_orders 
+DROP COLUMN IF EXISTS rs_id;
+
+-- Add rs_id column with proper foreign key
+ALTER TABLE users_orders 
+ADD COLUMN rs_id INT,
+ADD CONSTRAINT users_orders_rs_id_fk 
+FOREIGN KEY (rs_id) REFERENCES restaurant(rs_id);
+
+-- Update existing orders with restaurant IDs from dishes
+UPDATE users_orders uo 
+INNER JOIN dishes d ON uo.title = d.title 
+SET uo.rs_id = d.rs_id 
+WHERE uo.rs_id IS NULL;
