@@ -5,213 +5,289 @@ include("connection/connect.php");
 error_reporting(0);
 session_start();
 ?>
-
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Restaurants</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/font-awesome.min.css" rel="stylesheet">
-    <link href="css/animsition.min.css" rel="stylesheet">
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nhà hàng</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #fd4d40;
+            --secondary-color: #ff9b44;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 1rem 0;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
+        .search-form input {
+            border-radius: 20px;
+            border: none;
+            padding-left: 1rem;
+        }
+
+        .search-form button {
+            border-radius: 20px;
+            padding: 0.375rem 1rem;
+        }
+
+        .restaurant-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .restaurant-image {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .filter-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .progress-steps {
+            padding: 2rem 0;
+            background: #f8f9fa;
+        }
+
+        .step-item {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .step-item.active .step-number {
+            background: var(--secondary-color);
+        }
+    </style>
 </head>
 
 <body>
-
-<header id="header" class="header-scroll top-header headrom">
-    <nav class="navbar navbar-dark position-relative">
-        <div class="container d-flex justify-content-between align-items-center">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
             <a class="navbar-brand" href="index.php">
-                <img class="img-rounded" src="images/logo.png" alt="" width="18%">
+                <img src="images/logo.png" alt="Logo">
             </a>
             
-            <ul class="nav navbar-nav d-flex flex-row">
-                <li class="nav-item"><a class="nav-link active" href="index.php">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link active" href="restaurants.php">Nhà hàng</a></li>
-                <?php
-                if(empty($_SESSION["user_id"])) {
-                    echo '<li class="nav-item"><a href="login.php" class="nav-link active">Đăng nhập</a></li>
-                          <li class="nav-item"><a href="registration.php" class="nav-link active">Đăng ký</a></li>';
-                } else {
-                    echo '<li class="nav-item"><a href="your_orders.php" class="nav-link active">Đơn hàng</a></li>';
-                    echo '<li class="nav-item"><a href="logout.php" class="nav-link active">Đăng xuất</a></li>';
-                }
-                ?>
-            </ul>
-
-            <!-- Thanh tìm kiếm -->
-            <div class="form-inline d-flex search-form">
-                <input type="text" id="searchInput" class="form-control d-none" placeholder="Search restaurants...">
-                <button id="searchButton" class="btn btn-light"><i class="fas fa-search"></i></button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="restaurants.php">Nhà hàng</a>
+                    </li>
+                    <?php if(empty($_SESSION["user_id"])) { ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="login.php">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="registration.php">Đăng ký</a>
+                        </li>
+                    <?php } else { ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="your_orders.php">Đơn hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="logout.php">Đăng xuất</a>
+                        </li>
+                    <?php } ?>
+                </ul>
+                
+                <form class="d-flex search-form">
+                    <input class="form-control me-2" type="search" id="searchInput" placeholder="Tìm nhà hàng...">
+                    <button class="btn btn-light" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
-</header>
 
-<style>
-    .search-form {
-        position: absolute;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-    .filter-form {
-        margin-top: 20px;
-    }
-    /* Thêm style để đảm bảo chiều cao tối thiểu cho vùng nội dung */
-    .page-wrapper {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-    .restaurants-page {
-        flex: 1;
-        padding-bottom: 40px; /* Thêm padding phía dưới */
-    }
-    /* Style cho footer */
-    footer {
-        margin-top: auto;
-    }
-</style>
-
-<div class="page-wrapper">
-    <div class="top-links">
-        <div class="container">
-            <ul class="row links">
-                <li class="col-xs-12 col-sm-4 link-item active"><span>1</span><a href="#">Lựa chọn nhà hàng</a></li>
-                <li class="col-xs-12 col-sm-4 link-item"><span>2</span><a href="#">Lựa chọn món ăn yêu thích</a></li>
-                <li class="col-xs-12 col-sm-4 link-item"><span>3</span><a href="#">Xác nhận & Thanh toán</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="inner-page-hero bg-image" data-image-src="images/img/pimg.jpg">
-        <div class="container"></div>
-    </div>
-
-    <div class="result-show">
-        <div class="container">
-            <div class="row"></div>
-        </div>
-    </div>
-
-    <section class="restaurants-page">
+    <!-- Progress Steps -->
+    <div class="progress-steps">
         <div class="container">
             <div class="row">
-
-                <!-- Bộ lọc khu vực -->
-                <div class="col-xs-12 col-sm-5 col-md-5 col-lg-3">
-                    <form method="GET" class="filter-form">
-                        <h5><strong>Lọc theo khu vực</strong></h5>
-                        <div class="form-group position-relative">
-                            <input type="text" id="district-input" name="district" class="form-control" autocomplete="off" placeholder="Nhập tên khu vực...">
-                            <div id="suggestions" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">Lọc</button>
-                    </form>
+                <div class="col-md-4 step-item active">
+                    <div class="step-number">1</div>
+                    <h6>Chọn nhà hàng</h6>
                 </div>
-
-                <!-- Danh sách nhà hàng -->
-                <div class="col-xs-12 col-sm-7 col-md-7 col-lg-9">
-                    <div class="bg-gray restaurant-entry">
-                        <div class="row">
-                            <?php
-                            $where = " WHERE 1=1 ";
-                            if (!empty($_GET['district'])) {
-                                $district = mysqli_real_escape_string($db, $_GET['district']);
-                                $where .= " AND (district LIKE '%$district%' OR address LIKE '%$district%')";
-                            }
-                            
-                            $ress = mysqli_query($db, "SELECT * FROM restaurant $where");
-                            if (mysqli_num_rows($ress) > 0) {
-                                while ($rows = mysqli_fetch_array($ress)) {
-                                    echo '
-                                    <div class="restaurant-item col-sm-12 col-md-12 col-lg-8 text-xs-center text-sm-left">
-                                        <div class="entry-logo">
-                                            <a class="img-fluid" href="dishes.php?res_id='.$rows['rs_id'].'" > 
-                                                <img src="admin/Res_img/'.$rows['image'].'" alt="Food logo">
-                                            </a>
-                                        </div>
-                                        <div class="entry-dscr">
-                                            <h5><a href="dishes.php?res_id='.$rows['rs_id'].'" >'.$rows['title'].'</a></h5> 
-                                            <span>'.$rows['address'].'</span>
-                                        </div>
-                                    </div>';
-                                }
-                            } else {
-                                echo '<div class="col-md-12"><p>Không tìm thấy nhà hàng nào.</p></div>';
-                                echo '<div class="col-md-12" style="min-height: 300px;"></div>'; // Thêm phần tử có chiều cao tối thiểu
-                            }
-                            ?>
-                        </div>
-                    </div>
+                <div class="col-md-4 step-item">
+                    <div class="step-number">2</div>
+                    <h6>Chọn món ăn</h6>
                 </div>
-
+                <div class="col-md-4 step-item">
+                    <div class="step-number">3</div>
+                    <h6>Thanh toán</h6>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
-</div> <!-- Đóng page-wrapper ở đây, trước footer -->
+    <!-- Main Content -->
+    <div class="container py-5">
+        <div class="row">
+            <!-- Filter Section -->
+            <div class="col-lg-3 mb-4">
+                <div class="filter-card">
+                    <h5 class="mb-3">Lọc theo khu vực</h5>
+                    <form method="GET">
+                        <div class="mb-3">
+                            <input type="text" id="district-input" name="district" 
+                                   class="form-control" placeholder="Nhập tên khu vực...">
+                            <div id="suggestions" class="list-group mt-2"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Lọc
+                        </button>
+                    </form>
+                </div>
+            </div>
 
-<?php include "include/footer.php" ?>
+            <!-- Restaurants List -->
+            <div class="col-lg-9">
+                <div class="row">
+                    <?php
+                    $where = " WHERE 1=1 ";
+                    if (!empty($_GET['district'])) {
+                        $district = mysqli_real_escape_string($db, $_GET['district']);
+                        $where .= " AND (district LIKE '%$district%' OR address LIKE '%$district%')";
+                    }
+                    
+                    $ress = mysqli_query($db, "SELECT * FROM restaurant $where");
+                    if (mysqli_num_rows($ress) > 0) {
+                        while ($row = mysqli_fetch_array($ress)) {
+                            echo '<div class="col-md-6 mb-4 restaurant-item">
+                                <div class="card restaurant-card">
+                                    <img src="admin/Res_img/'.$row['image'].'" 
+                                         class="card-img-top restaurant-image" alt="'.$row['title'].'">
+                                    <div class="card-body">
+                                        <h5 class="card-title">'.$row['title'].'</h5>
+                                        <p class="card-text">
+                                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                            '.$row['address'].'
+                                        </p>
+                                        <a href="dishes.php?res_id='.$row['rs_id'].'" 
+                                           class="btn btn-primary w-100">
+                                            <i class="fas fa-utensils me-2"></i>Xem menu
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>';
+                        }
+                    } else {
+                        echo '<div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Không tìm thấy nhà hàng nào.
+                            </div>
+                        </div>';
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script src="js/jquery.min.js"></script>
-<script src="js/tether.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/animsition.min.js"></script>
-<script src="js/bootstrap-slider.min.js"></script>
-<script src="js/jquery.isotope.min.js"></script>
-<script src="js/headroom.js"></script>
-<script src="js/foodpicky.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#searchButton').on('click', function() {
-            $('#searchInput').toggleClass('d-none').focus();
-        });
+    <?php include "include/footer.php" ?>
 
-        $('#searchInput').on('keyup', function() {
-            var value = $(this).val().toLowerCase();
-            $('.restaurant-item').each(function() {
-                var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
-                $(this).toggle(title.indexOf(value) > -1);
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#searchButton').on('click', function() {
+                $('#searchInput').toggleClass('d-none').focus();
+            });
+
+            $('#searchInput').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $('.restaurant-item').each(function() {
+                    var title = $(this).find('.entry-dscr h5 a').text().toLowerCase();
+                    $(this).toggle(title.indexOf(value) > -1);
+                });
             });
         });
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        $('#district-input').keyup(function() {
-            let query = $(this).val();
-            if (query.length > 0) {
-                $.ajax({
-                    url: "get_districts.php",
-                    method: "GET",
-                    data: { q: query },
-                    success: function(data) {
-                        $('#suggestions').fadeIn().html(data);
-                    }
-                });
-            } else {
-                $('#suggestions').fadeOut();
-            }
-        });
+        $(document).ready(function() {
+            $('#district-input').keyup(function() {
+                let query = $(this).val();
+                if (query.length > 0) {
+                    $.ajax({
+                        url: "get_districts.php",
+                        method: "GET",
+                        data: { q: query },
+                        success: function(data) {
+                            $('#suggestions').fadeIn().html(data);
+                        }
+                    });
+                } else {
+                    $('#suggestions').fadeOut();
+                }
+            });
 
-        // Khi click vào gợi ý
-        $(document).on('click', '.suggestion-item', function(){
-            $('#searchInput').val($(this).text());
-            $('.suggestions-list').hide();
-        });
+            // Khi click vào gợi ý
+            $(document).on('click', '.suggestion-item', function(){
+                $('#searchInput').val($(this).text());
+                $('.suggestions-list').hide();
+            });
 
-        // Ẩn gợi ý khi click ngoài
-        $(document).click(function(e) {
-            if (!$(e.target).closest('#district-input, #suggestions').length) {
-                $('#suggestions').fadeOut();
-            }
+            // Ẩn gợi ý khi click ngoài
+            $(document).click(function(e) {
+                if (!$(e.target).closest('#district-input, #suggestions').length) {
+                    $('#suggestions').fadeOut();
+                }
+            });
         });
-    });
-</script>
-
+    </script>
 </body>
 </html>

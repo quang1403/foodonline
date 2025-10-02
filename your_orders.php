@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <?php
@@ -6,329 +5,231 @@ include("connection/connect.php");
 error_reporting(0);
 session_start();
 
-if(empty($_SESSION['user_id']))  
-{
-	header('location:login.php');
+if(empty($_SESSION['user_id'])) {
+    header('location:login.php');
+    exit();
 }
-else
-{
 ?>
-
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="#">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đơn hàng của tôi</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/font-awesome.min.css" rel="stylesheet">
-    <link href="css/animsition.min.css" rel="stylesheet">
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
-    <style type="text/css" rel="stylesheet">
-    .indent-small {
-        margin-left: 5px;
-    }
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Add these styles to your existing CSS */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .form-group.internal {
-        margin-bottom: 0;
-    }
+        .main-content {
+            flex: 1 0 auto;
+        }
 
-    .dialog-panel {
-        margin: 10px;
-    }
+        footer {
+            margin-top: auto;
+        }
 
-    .datepicker-dropdown {
-        z-index: 200 !important;
-    }
+        /* Your existing styles */
+        :root {
+            --primary-color: #fd4d40;
+            --secondary-color: #ff9b44;
+        }
 
-    .panel-body {
-        background: #e5e5e5;
-        /* Old browsers */
-        background: -moz-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        /* FF3.6+ */
-        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #e5e5e5), color-stop(100%, #ffffff));
-        /* Chrome,Safari4+ */
-        background: -webkit-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        /* Chrome10+,Safari5.1+ */
-        background: -o-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        /* Opera 12+ */
-        background: -ms-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-        /* IE10+ */
-        background: radial-gradient(ellipse at center, #e5e5e5 0%, #ffffff 100%);
-        /* W3C */
-        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e5e5e5', endColorstr='#ffffff', GradientType=1);
-        font: 600 15px "Open Sans", Arial, sans-serif;
-    }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 1rem 0;
+        }
 
-    label.control-label {
-        font-weight: 600;
-        color: #777;
-    }
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
 
-    /* 
-table { 
-	width: 750px; 
-	border-collapse: collapse; 
-	margin: auto;
-	
-	}
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
 
-/* Zebra striping */
-    /* tr:nth-of-type(odd) { 
-	background: #eee; 
-	}
+        .order-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
 
-th { 
-	background: #404040; 
-	color: white; 
-	font-weight: bold; 
-	
-	}
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
 
-td, th { 
-	padding: 10px; 
-	border: 1px solid #ccc; 
-	text-align: left; 
-	font-size: 14px;
-	
-	} */
-    @media only screen and (max-width: 760px),
-    (min-device-width: 768px) and (max-device-width: 1024px) {
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-        /* table { 
-	  	width: 100%; 
-	}
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+        }
 
-	
-	table, thead, tbody, th, td, tr { 
-		display: block; 
-	} */
-
-
-        /* thead tr { 
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	}
-	
-	tr { border: 1px solid #ccc; } */
-
-        /* td { 
-		
-		border: none;
-		border-bottom: 1px solid #eee; 
-		position: relative;
-		padding-left: 50%; 
-	}
-
-	td:before { 
-		
-		position: absolute;
-	
-		top: 6px;
-		left: 6px;
-		width: 45%; 
-		padding-right: 10px; 
-		white-space: nowrap;
-		
-		content: attr(data-column);
-
-		color: #000;
-		font-weight: bold;
-	} */
-
-    }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
     </style>
-
 </head>
 
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.php">
+                <img src="images/logo.png" alt="Logo" height="40">
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">
+                            <i class="fas fa-home me-2"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="restaurants.php">
+                            <i class="fas fa-store me-2"></i>Nhà hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="your_orders.php">
+                            <i class="fas fa-list me-2"></i>Đơn hàng
+                        </a>
+                    </li>
+                </ul>
 
-
-    <header id="header" class="header-scroll top-header headrom">
-
-        <nav class="navbar navbar-dark">
-            <div class="container">
-                <button class="navbar-toggler hidden-lg-up" type="button" data-toggle="collapse" data-target="#mainNavbarCollapse">&#9776;</button>
-                <a class="navbar-brand" href="index.php"> <img class="img-rounded" src="images/logo.png" alt="" width="18%"> </a>
-                <div class="collapse navbar-toggleable-md  float-lg-right" id="mainNavbarCollapse">
-                    <ul class="nav navbar-nav">
-                        <li class="nav-item"> <a class="nav-link active" href="index.php">Trang chủ <span class="sr-only">(current)</span></a> </li>
-                        <li class="nav-item"> <a class="nav-link active" href="restaurants.php">Nhà hàng <span class="sr-only"></span></a> </li>
-
-                        <?php
-						if(empty($_SESSION["user_id"]))
-							{
-								echo '<li class="nav-item"><a href="login.php" class="nav-link active">Đăng nhập</a> </li>
-							  <li class="nav-item"><a href="registration.php" class="nav-link active">Đăng ký</a> </li>';
-							}
-						else
-							{
-									
-									
-									echo  '<li class="nav-item"><a href="your_orders.php" class="nav-link active">Đơn hàng</a> </li>';
-									echo  '<li class="nav-item"><a href="logout.php" class="nav-link active">Đăng xuất</a> </li>';
-							}
-
-						?>
-
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-    </header>
-    <div class="page-wrapper">
-
-
-
-        <div class="inner-page-hero bg-image" data-image-src="images/img/pimg.jpg">
-            <div class="container"> </div>
-
-        </div>
-        <div class="result-show">
-            <div class="container">
-                <div class="row">
-
-
-                </div>
-            </div>
-        </div>
-
-        <section class="restaurants-page">
-            <div class="container">
-                <div class="row">
-                    <div class="col-xs-12">
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" 
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-2"></i><?php echo $_SESSION["username"]; ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="profile.php">
+                                    <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="logout.php">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="col-xs-12">
-                        <div class="bg-gray">
-                            <div class="row">
+                </div>
+            </div>
+        </div>
+    </nav>
 
-                                <table class="table table-bordered table-hover">
-                                    <thead style="background: #404040; color:white;">
-                                        <tr>
-
-                                            <th>Món ăn</th>
-                                            <th>Số lượng</th>
-                                            <th>Giá</th>
-                                            <th>Trạng thái</th>
-                                            <th>Thời gian</th>
-                                            <th>Hành động</th>
-
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container py-5">
+            <div class="card order-card">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Lịch sử đơn hàng</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Món ăn</th>
+                                    <th>Số lượng</th>
+                                    <th>Giá</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời gian</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $query_res = mysqli_query($db,"SELECT * FROM users_orders WHERE u_id='".$_SESSION['user_id']."' ORDER BY date DESC");
+                                if(!mysqli_num_rows($query_res) > 0) {
+                                    echo '<tr><td colspan="6" class="text-center">Không có đơn hàng nào.</td></tr>';
+                                } else {
+                                    while($row = mysqli_fetch_array($query_res)) {
+                                ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
+                                    <td><?php echo $row['quantity']; ?></td>
+                                    <td><?php echo number_format($row['price'], 0, ',', '.'); ?> VNĐ</td>
+                                    <td>
                                         <?php 
-				
-						$query_res= mysqli_query($db,"select * from users_orders where u_id='".$_SESSION['user_id']."'");
-												if(!mysqli_num_rows($query_res) > 0 )
-														{
-															echo '<td colspan="6"><center>Không có đơn hàng nào. </center></td>';
-														}
-													else
-														{			      
-										  
-										  while($row=mysqli_fetch_array($query_res))
-										  {
-						
-							?>
-                                        <tr>
-                                            <td data-column="Item"> <?php echo $row['title']; ?></td>
-                                            <td data-column="Quantity"> <?php echo $row['quantity']; ?></td>
-                                            <td data-column="price"><?php echo number_format($row['price'], 0, ',', '.') . ' VND'; ?></td>
-                                            <td data-column="status">
-                                                
-                                            <?php 
-                                                $status=$row['status'];
-                                                if($status=="" or $status=="NULL") {
-                                                ?>
-                                                    <button type="button" class="btn btn-secondary">
-                                                        <span class="fa fa-clock" aria-hidden="true"></span> Chờ xác nhận
-                                                    </button>
-                                                <?php 
-                                                }
-                                                if($status=="preparing") { ?>
-                                                    <button type="button" class="btn btn-info">
-                                                        <span class="fa fa-hourglass-half" aria-hidden="true"></span> Đang chuẩn bị
-                                                    </button>
-                                                <?php }
-                                                if($status=="prepared") { ?>
-                                                    <button type="button" class="btn btn-primary">
-                                                        <span class="fa fa-check" aria-hidden="true"></span> Đã chuẩn bị
-                                                    </button>
-                                                <?php }
-                                                if($status=="in process") { ?>
-                                                    <button type="button" class="btn btn-warning">
-                                                        <span class="fa fa-motorcycle" aria-hidden="true"></span> Đang trên đường giao!
-                                                    </button>
-                                                <?php }
-                                                if($status=="closed") { ?>
-                                                    <button type="button" class="btn btn-success">
-                                                        <span class="fa fa-check-circle" aria-hidden="true"></span> Đã giao
-                                                    </button>
-                                                <?php }
-                                                if($status=="rejected") { ?>
-                                                    <button type="button" class="btn btn-danger">
-                                                        <i class="fa fa-close"></i> Đã hủy
-                                                    </button>
-                                                <?php } 
-                                            ?>
-
-                                            </td>
-                                            <td data-column="Date"> <?php echo $row['date']; ?></td>
-                                            <td data-column="Action"> <a href="delete_orders.php?order_del=<?php echo $row['o_id'];?>" onclick="return confirm('Are you sure you want to cancel your order?');" class="btn btn-danger btn-flat btn-addon btn-xs m-b-10"><i class="fa fa-trash-o" style="font-size:16px"></i></a>
-                                            </td>
-
-                                        </tr>
-
-
-                                        <?php }} ?>
-
-
-
-
-                                    </tbody>
-                                </table>
-
-
-
-                            </div>
-
-                        </div>
-
-
-
+                                        $status = $row['status'];
+                                        switch($status) {
+                                            case "NULL":
+                                            case "":
+                                                echo '<span class="badge bg-secondary"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
+                                                break;
+                                            case "preparing":
+                                                echo '<span class="badge bg-info"><i class="fas fa-hourglass-half me-1"></i>Đang chuẩn bị</span>';
+                                                break;
+                                            case "prepared":
+                                                echo '<span class="badge bg-primary"><i class="fas fa-check me-1"></i>Đã chuẩn bị</span>';
+                                                break;
+                                            case "in process":
+                                                echo '<span class="badge bg-warning"><i class="fas fa-motorcycle me-1"></i>Đang giao</span>';
+                                                break;
+                                            case "closed":
+                                                echo '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Đã giao</span>';
+                                                break;
+                                            case "rejected":
+                                                echo '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>';
+                                                break;
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo date('d/m/Y H:i', strtotime($row['date'])); ?></td>
+                                    <td>
+                                        <?php if($status != "closed" && $status != "rejected") { ?>
+                                        <a href="delete_orders.php?order_del=<?php echo $row['o_id']; ?>" 
+                                           onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?');" 
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times me-1"></i>Hủy
+                                        </a>
+                                        <?php } ?>
+                                    </td>
+                                </tr>
+                                <?php 
+                                    }
+                                } 
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
-
-
-
                 </div>
             </div>
+        </div>
     </div>
-    </section>
 
-
+    <!-- Footer -->
     <?php include "include/footer.php" ?>
 
-    </div>
-
-
-    <script src="js/jquery.min.js"></script>
-    <script src="js/tether.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/animsition.min.js"></script>
-    <script src="js/bootstrap-slider.min.js"></script>
-    <script src="js/jquery.isotope.min.js"></script>
-    <script src="js/headroom.js"></script>
-    <script src="js/foodpicky.min.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 </body>
-
 </html>
-<?php
-}
-?>

@@ -1,432 +1,305 @@
-
-<!DOCTYPE html>
-<html lang="en">
 <?php
-include("connection/connect.php"); 
+include("connection/connect.php");
 error_reporting(0);
 session_start();
 
-include_once 'product-action.php'; 
+// Include cart functionality 
+include_once 'product-action.php';
 
+// Check if restaurant ID is provided
+if(!isset($_GET['res_id']) || !is_numeric($_GET['res_id'])) {
+    header('location: restaurants.php');
+    exit();
+}
+
+// Get restaurant details
+$stmt = mysqli_prepare($db, "SELECT * FROM restaurant WHERE rs_id = ?");
+mysqli_stmt_bind_param($stmt, "i", $_GET['res_id']);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$restaurant = mysqli_fetch_array($result);
+
+if(!$restaurant) {
+    header('location: restaurants.php');
+    exit();
+}
 ?>
-
-
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="#">
-    <title>Dishes || DelishHub-Đồ ăn nhanh HQ</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/font-awesome.min.css" rel="stylesheet">
-    <link href="css/animsition.min.css" rel="stylesheet">
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Menu nhà hàng</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #fd4d40;
+            --secondary-color: #ff9b44;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .step-item {
+            position: relative;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 35px;
+            height: 35px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-item.active .step-number {
+            background: var(--secondary-color);
+        }
+
+        .restaurant-banner {
+            background-size: cover;
+            background-position: center;
+            padding: 3rem 0;
+            position: relative;
+        }
+
+        .restaurant-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .restaurant-info {
+            position: relative;
+            color: white;
+        }
+
+        .menu-item {
+            transition: all 0.3s;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .cart-sidebar {
+            position: sticky;
+            top: 1rem;
+        }
+
+        .quantity-control {
+            max-width: 80px;
+        }
+    </style>
 </head>
 
 <body>
-    
-
-    <header id="header" class="header-scroll top-header headrom">
-        <nav class="navbar navbar-dark">
-            <div class="container">
-                <button class="navbar-toggler hidden-lg-up" type="button" data-toggle="collapse" data-target="#mainNavbarCollapse">&#9776;</button>
-                <a class="navbar-brand" href="index.php"> <img class="img-rounded" src="images/logo.png" alt="" width="18%"> </a>
-                <div class="collapse navbar-toggleable-md  float-lg-right" id="mainNavbarCollapse">
-                    <ul class="nav navbar-nav">
-                        <li class="nav-item"> <a class="nav-link active" href="index.php">Trang chủ <span class="sr-only">(current)</span></a> </li>
-                        <li class="nav-item"> <a class="nav-link active" href="restaurants.php">Nhà hàng <span class="sr-only"></span></a> </li>
-
-                        <?php
-						if(empty($_SESSION["user_id"]))
-							{
-								echo '<li class="nav-item"><a href="login.php" class="nav-link active">Đăng nhập</a> </li>
-							  <li class="nav-item"><a href="registration.php" class="nav-link active">Đăng ký</a> </li>';
-							}
-						else
-							{
-									
-									
-										echo  '<li class="nav-item"><a href="your_orders.php" class="nav-link active">Đơn hàng</a> </li>';
-									echo  '<li class="nav-item"><a href="logout.php" class="nav-link active">Đăng xuất</a> </li>';
-							}
-
-						?>
-                      
-
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="page-wrapper">
-        <div class="top-links">
-            <div class="container">
-                <ul class="row links">
-
-                    <li class="col-xs-12 col-sm-4 link-item"><span>1</span><a href="restaurants.php">Lựa chọn nhà hàng</a></li>
-                    <li class="col-xs-12 col-sm-4 link-item active"><span>2</span><a href="dishes.php?res_id=<?php echo $_GET['res_id']; ?>">Chọn món</a></li>
-                    <li class="col-xs-12 col-sm-4 link-item"><span>3</span><a href="#">Xác nhận & Thanh toán</a></li>
-
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.php">
+                <img src="images/logo.png" height="40" alt="Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="restaurants.php">Nhà hàng</a>
+                    </li>
+                    <?php if(empty($_SESSION["user_id"])) { ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="login.php">Đăng nhập</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="registration.php">Đăng ký</a>
+                        </li>
+                    <?php } else { ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="your_orders.php">Đơn hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="logout.php">Đăng xuất</a>
+                        </li>
+                    <?php } ?>
                 </ul>
             </div>
         </div>
-        <?php $ress= mysqli_query($db,"select * from restaurant where rs_id='$_GET[res_id]'");
-									     $rows=mysqli_fetch_array($ress);
-										  
-										  ?>
-        <section class="inner-page-hero bg-image" data-image-src="images/img/restrrr.png">
-            <div class="profile">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-xs-12 col-sm-12  col-md-4 col-lg-4 profile-img">
-                            <div class="image-wrap">
-                                <figure><?php echo '<img src="admin/Res_img/'.$rows['image'].'" alt="Restaurant logo">'; ?></figure>
-                            </div>
-                        </div>
-                        
+    </nav>
 
-                        <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 profile-desc">
-                            <div class="pull-left right-text white-txt">
-                                <h6><a href="#"><?php echo $rows['title']; ?></a></h6>
-                                <p><?php echo $rows['address']; ?></p>
-                            </div>
-                        </div>
-
-
-                    </div>
-                </div>
+    <!-- Progress Steps -->
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-4 step-item">
+                <div class="step-number">1</div>
+                <h6>Chọn nhà hàng</h6>
             </div>
-        </section>
-        <div class="breadcrumb">
-            <div class="container">
-                
-
+            <div class="col-md-4 step-item active">
+                <div class="step-number">2</div>
+                <h6>Chọn món ăn</h6>
+            </div>
+            <div class="col-md-4 step-item">
+                <div class="step-number">3</div>
+                <h6>Thanh toán</h6>
             </div>
         </div>
-        <div class="container m-t-30">
-            <div class="row">
-                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3">
+    </div>
 
-                    <div class="widget widget-cart">
-                        <div class="widget-heading">
-                            <h3 class="widget-title text-dark">
-                                Giỏ hàng của bạn
-                            </h3>
-
-
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="order-row bg-white">
-                            <div class="widget-body">
-
-                                
-
-                                <?php
-
-$item_total = 0;
-
-foreach ($_SESSION["cart_item"] as $item)  
-{
-?>
-
-                                <div class="title-row">
-                                    <?php echo $item["title"]; ?><a href="dishes.php?res_id=<?php echo $_GET['res_id']; ?>&action=remove&id=<?php echo $item["d_id"]; ?>">
-                                        <i class="fa fa-trash pull-right"></i></a>
-                                </div>
-
-                                <div class="form-group row no-gutter">
-                                <div class="col-xs-8">
-                                <input type="text" class="form-control b-r-0" 
-                                    value="<?php echo number_format($item['price'], 0, ',', '.') . ' VND'; ?>" 
-                                    readonly id="exampleSelect1">
-                            </div>
-
-                                    <div class="col-xs-4">
-                                        <input class="form-control" type="text" readonly value='<?php echo $item["quantity"]; ?>' id="example-number-input">
-                                    </div>
-
-                                </div>
-
-                                <?php
-$item_total += ($item["price"]*$item["quantity"]); 
-}
-?>
-                                
-
-
-
-                            </div>
-                        </div>
-
-
-
-                        <div class="widget-body">
-                            <div class="price-wrap text-xs-center">
-                                <p>Đơn giá</p>
-                                <h3 class="value"><strong><?php echo number_format($item_total, 0, ',', '.') . ' VND'; ?></strong></h3>
-                                <p>Miễn phí vận chuyển!</p>
-                                <?php
-                                        if($item_total==0){
-                                        ?>
-
-
-                                <a href="checkout.php?res_id=<?php echo $_GET['res_id'];?>&action=check" class="btn btn-danger btn-lg disabled">Thanh toán</a>
-
-                                <?php
-                                        }
-                                        else{   
-                                        ?>
-                                <a href="checkout.php?res_id=<?php echo $_GET['res_id'];?>&action=check" class="btn btn-success btn-lg active">Thanh toán</a>
-                                <?php   
-                                        }
-                                        ?>
-
-                            </div>
-                        </div>
-
-
-                        
-
-
+    <!-- Restaurant Banner -->
+    <div class="restaurant-banner mb-4" 
+         style="background-image: url('images/img/restrrr.png')">
+        <div class="container">
+            <div class="restaurant-info">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <img src="admin/Res_img/<?php echo $restaurant['image']; ?>" 
+                             class="img-fluid rounded" alt="Restaurant logo">
+                    </div>
+                    <div class="col-md-10">
+                        <h2><?php echo $restaurant['title']; ?></h2>
+                        <p class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            <?php echo $restaurant['address']; ?>
+                        </p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="col-md-8">
-
-
-                    <div class="menu-widget" id="2">
-                        <div class="widget-heading">
-                            <h3 class="widget-title text-dark">
-                                MENU <a class="btn btn-link pull-right" data-toggle="collapse" href="#popular2" aria-expanded="true">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                    <i class="fa fa-angle-down pull-right"></i>
-                                </a>
-                            </h3>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="collapse in" id="popular2">
-                            <?php  
-									$stmt = $db->prepare("select * from dishes where rs_id='$_GET[res_id]'");
-									$stmt->execute();
-									$products = $stmt->get_result();
-									if (!empty($products)) 
-									{
-									foreach($products as $product)
-										{
-				 
-													 ?>
-                            
-
-                            <div class="food-item">
-                                <div class="row">
-                                    <div class="col-xs-12 col-sm-12 col-lg-8">
-                                        <form method="post" action='dishes.php?res_id=<?php echo $_GET['res_id'];?>&action=add&id=<?php echo $product['d_id']; ?>'>
-                                            <div class="rest-logo pull-left">
-                                                <a class="restaurant-logo pull-left" href="#"><?php echo '<img src="admin/Res_img/dishes/'.$product['img'].'" alt="Food logo">'; ?></a>
-                                            </div>
-
-                                            <div class="rest-descr">
-                                                <h6><a href="#"><?php echo $product['title']; ?></a></h6>
-                                                <p> <?php echo $product['slogan']; ?></p>
-                                            </div>
-
-                                    </div>
-
-                                    <div class="col-xs-12 col-sm-12 col-lg-3 pull-right item-cart-info">
-                                        <span class="price pull-left"><?php echo number_format($product['price'], 0, ',', '.') . ' VND'; ?></span>
-
-                                        <input class="b-r-0" type="text" name="quantity" style="margin-left:20px;" value="1" size="2" />
-                                        <input type="submit" class="btn theme-btn" style="margin-left:40px;" value="Thêm ngay" />
-                                    </div>
+    <!-- Menu Content -->
+    <div class="container mb-5">
+        <div class="row">
+            <!-- Menu Items -->
+            <div class="col-md-8">
+                <div class="row g-4">
+                    <?php  
+                    $stmt = $db->prepare("SELECT * FROM dishes WHERE rs_id=?");
+                    $stmt->bind_param("i", $_GET['res_id']);
+                    $stmt->execute();
+                    $products = $stmt->get_result();
+                    
+                    if($products->num_rows > 0) {
+                        while($product = $products->fetch_assoc()) {
+                    ?>
+                    <div class="col-md-6">
+                        <div class="menu-item">
+                            <img src="admin/Res_img/dishes/<?php echo $product['img']; ?>" 
+                                 alt="<?php echo $product['title']; ?>">
+                            <div class="card-body">
+                                <h5 class="card-title"><?php echo $product['title']; ?></h5>
+                                <p class="card-text"><?php echo $product['slogan']; ?></p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <?php echo number_format($product['price'], 0, ',', '.'); ?> VNĐ
+                                    </h6>
+                                    <form method="post" class="d-flex align-items-center gap-2"
+                                          action="dishes.php?res_id=<?php echo $_GET['res_id']; ?>&action=add&id=<?php echo $product['d_id']; ?>">
+                                        <input type="number" name="quantity" value="1" min="1"
+                                               class="form-control quantity-control">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </button>
                                     </form>
                                 </div>
-
                             </div>
-                            
-
-
-                            <?php
-									  }
-									}
-									
-								?>
-
-
-
                         </div>
-
                     </div>
-
-
+                    <?php 
+                        }
+                    } else {
+                        echo '<div class="col-12">
+                                <div class="alert alert-info">
+                                    Chưa có món ăn nào.
+                                </div>
+                              </div>';
+                    }
+                    ?>
                 </div>
-
             </div>
 
-        </div>
-        
-
-
-        <?php include "include/footer.php" ?>
-
-    </div>
-
-    </div>
-    
-
-    <div class="modal fade" id="order-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span> </button>
-                <div class="modal-body cart-addon">
-                    <div class="food-item white">
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-lg-6">
-                                <div class="item-img pull-left">
-                                    <a class="restaurant-logo pull-left" href="#"><img src="http://placehold.it/70x70" alt="Food logo"></a>
-                                </div>
-
-                                <div class="rest-descr">
-                                    <h6><a href="#">Sandwich de Alegranza Grande Menü (28 - 30 cm.)</a></h6>
-                                </div>
-
+            <!-- Cart Sidebar -->
+            <div class="col-md-4">
+                <div class="cart-sidebar card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart me-2"></i>Giỏ hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php
+                        $item_total = 0;
+                        if(isset($_SESSION["cart_item"])) {
+                            foreach($_SESSION["cart_item"] as $item) {
+                        ?>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0"><?php echo $item["title"]; ?></h6>
+                                <small>
+                                    <?php echo number_format($item["price"], 0, ',', '.'); ?> VNĐ 
+                                    x <?php echo $item["quantity"]; ?>
+                                </small>
                             </div>
-                            
-                            <div class="col-xs-6 col-sm-2 col-lg-2 text-xs-center"> <span class="price pull-left">$ 2.99</span></div>
-                            <div class="col-xs-6 col-sm-4 col-lg-4">
-                                <div class="row no-gutter">
-                                    <div class="col-xs-7">
-                                        <select class="form-control b-r-0" id="exampleSelect2">
-                                            <option>Size SM</option>
-                                            <option>Size LG</option>
-                                            <option>Size XL</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-xs-5">
-                                        <input class="form-control" type="number" value="0" id="quant-input-2">
-                                    </div>
-                                </div>
+                            <div>
+                                <a href="dishes.php?res_id=<?php echo $_GET['res_id']; ?>&action=remove&id=<?php echo $item["d_id"]; ?>" 
+                                   class="text-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </div>
                         </div>
-
+                        <?php
+                                $item_total += ($item["price"] * $item["quantity"]);
+                            }
+                        }
+                        ?>
                     </div>
-
-                    <div class="food-item">
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-lg-6">
-                                <div class="item-img pull-left">
-                                    <a class="restaurant-logo pull-left" href="#"><img src="http://placehold.it/70x70" alt="Food logo"></a>
-                                </div>
-
-                                <div class="rest-descr">
-                                    <h6><a href="#">Sandwich de Alegranza Grande Menü (28 - 30 cm.)</a></h6>
-                                </div>
-
-                            </div>
-                            
-                            <div class="col-xs-6 col-sm-2 col-lg-2 text-xs-center"> <span class="price pull-left">$ 2.49</span></div>
-                            <div class="col-xs-6 col-sm-4 col-lg-4">
-                                <div class="row no-gutter">
-                                    <div class="col-xs-7">
-                                        <select class="form-control b-r-0" id="exampleSelect3">
-                                            <option>Size SM</option>
-                                            <option>Size LG</option>
-                                            <option>Size XL</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-xs-5">
-                                        <input class="form-control" type="number" value="0" id="quant-input-3">
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="card-footer">
+                        <div class="text-center">
+                            <h5 class="mb-3">
+                                Tổng cộng: <?php echo number_format($item_total, 0, ',', '.'); ?> VNĐ
+                            </h5>
+                            <a href="checkout.php?res_id=<?php echo $_GET['res_id']; ?>&action=check" 
+                               class="btn btn-primary w-100 <?php echo ($item_total == 0) ? 'disabled' : ''; ?>">
+                                <i class="fas fa-check me-2"></i>Thanh toán
+                            </a>
                         </div>
-
                     </div>
-
-                    <div class="food-item">
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-lg-6">
-                                <div class="item-img pull-left">
-                                    <a class="restaurant-logo pull-left" href="#"><img src="http://placehold.it/70x70" alt="Food logo"></a>
-                                </div>
-
-                                <div class="rest-descr">
-                                    <h6><a href="#">Sandwich de Alegranza Grande Menü (28 - 30 cm.)</a></h6>
-                                </div>
-
-                            </div>
-                            
-                            <div class="col-xs-6 col-sm-2 col-lg-2 text-xs-center"> <span class="price pull-left">$ 1.99</span></div>
-                            <div class="col-xs-6 col-sm-4 col-lg-4">
-                                <div class="row no-gutter">
-                                    <div class="col-xs-7">
-                                        <select class="form-control b-r-0" id="exampleSelect5">
-                                            <option>Size SM</option>
-                                            <option>Size LG</option>
-                                            <option>Size XL</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-xs-5">
-                                        <input class="form-control" type="number" value="0" id="quant-input-4">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="food-item">
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-lg-6">
-                                <div class="item-img pull-left">
-                                    <a class="restaurant-logo pull-left" href="#"><img src="http://placehold.it/70x70" alt="Food logo"></a>
-                                </div>
-
-                                <div class="rest-descr">
-                                    <h6><a href="#">Sandwich de Alegranza Grande Menü (28 - 30 cm.)</a></h6>
-                                </div>
-
-                            </div>
-                            
-                            <div class="col-xs-6 col-sm-2 col-lg-2 text-xs-center"> <span class="price pull-left">$ 3.15</span></div>
-                            <div class="col-xs-6 col-sm-4 col-lg-4">
-                                <div class="row no-gutter">
-                                    <div class="col-xs-7">
-                                        <select class="form-control b-r-0" id="exampleSelect6">
-                                            <option>Size SM</option>
-                                            <option>Size LG</option>
-                                            <option>Size XL</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-xs-5">
-                                        <input class="form-control" type="number" value="0" id="quant-input-5">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn theme-btn">Thêm vào giỏ hàng</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/tether.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/animsition.min.js"></script>
-    <script src="js/bootstrap-slider.min.js"></script>
-    <script src="js/jquery.isotope.min.js"></script>
-    <script src="js/headroom.js"></script>
-    <script src="js/foodpicky.min.js"></script>
+    <?php include "include/footer.php" ?>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

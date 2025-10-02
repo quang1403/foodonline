@@ -141,10 +141,11 @@ if(empty($_SESSION["adm_id"])) {
                                                 <td>'.$row['address'].'</td>
                                                 <td>'.date('d/m/Y', strtotime($row['date'])).'</td>
                                                 <td>
-                                                    <a href="update_users.php?user_upd='.$row['u_id'].'" class="btn btn-primary table-action-btn">
+                                                    <button class="btn btn-primary btn-sm edit-user" data-id="'.$row['u_id'].'">
                                                         <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <a href="delete_users.php?user_del='.$row['u_id'].'" class="btn btn-danger table-action-btn" 
+                                                    </button>
+                                                    <a href="delete_users.php?user_del='.$row['u_id'].'" 
+                                                       class="btn btn-danger btn-sm"
                                                        onclick="return confirm(\'Bạn có chắc muốn xóa người dùng này?\')">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
@@ -162,6 +163,72 @@ if(empty($_SESSION["adm_id"])) {
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Cập nhật người dùng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" name="user_id">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Tên đăng nhập</label>
+                                    <input type="text" name="username" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Họ</label>
+                                    <input type="text" name="f_name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Tên</label>
+                                    <input type="text" name="l_name" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input type="text" name="phone" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Mật khẩu</label>
+                                    <input type="password" name="password" class="form-control">
+                                    <small class="text-muted">Để trống nếu không muốn thay đổi mật khẩu</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label class="form-label">Địa chỉ</label>
+                                    <textarea name="address" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="saveUser">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -169,10 +236,66 @@ if(empty($_SESSION["adm_id"])) {
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Initialize DataTable
             $('#usersTable').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
                 }
+            });
+
+            // Handle edit button click
+            $(document).on('click', '.edit-user', function() {
+                const userId = $(this).data('id');
+                
+                // Load user data
+                $.ajax({
+                    url: 'get_user.php',
+                    type: 'GET',
+                    data: { id: userId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.error) {
+                            alert(response.error);
+                            return;
+                        }
+                        
+                        const data = response.data;
+                        
+                        // Fill form data
+                        $('input[name="user_id"]').val(data.u_id);
+                        $('input[name="username"]').val(data.username);
+                        $('input[name="f_name"]').val(data.f_name);
+                        $('input[name="l_name"]').val(data.l_name);
+                        $('input[name="email"]').val(data.email);
+                        $('input[name="phone"]').val(data.phone);
+                        $('textarea[name="address"]').val(data.address);
+                        
+                        // Show modal
+                        $('#editUserModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error: ' + error);
+                        console.log(xhr.responseText);
+                    }
+                });
+            });
+
+            // Handle save changes
+            $('#saveUser').click(function() {
+                $.ajax({
+                    url: 'update_user_ajax.php',
+                    type: 'POST',
+                    data: $('#editUserForm').serialize(),
+                    success: function(response) {
+                        const result = JSON.parse(response);
+                        if(result.success) {
+                            $('#editUserModal').modal('hide');
+                            location.reload();
+                        } else {
+                            alert(result.message || 'Có lỗi xảy ra');
+                        }
+                    }
+                });
             });
         });
     </script>
