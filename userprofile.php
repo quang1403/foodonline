@@ -4,20 +4,15 @@ error_reporting(0);
 session_start();
 
 // Check if user is logged in
-if(strlen($_SESSION['user_id'])==0)
-{ 
+if(strlen($_SESSION['user_id'])==0) { 
     header('location:login.php');
+    exit();
 }
-else
-{
-    $current_user_id = $_SESSION['user_id'];
-    
-    // Get current user information
-    $query = mysqli_query($db, "SELECT * FROM users WHERE u_id='$current_user_id'");
-    $user_data = mysqli_fetch_array($query);
-    
-    // Handle avatar update
-    if(isset($_POST['update_avatar'])) {
+$current_user_id = $_SESSION['user_id'];
+$query = mysqli_query($db, "SELECT * FROM users WHERE u_id='$current_user_id'");
+$user_data = mysqli_fetch_array($query);
+
+if(isset($_POST['update_avatar'])) {
         // Check if file was uploaded without errors
         if(isset($_FILES["avatar"]) && $_FILES["avatar"]["error"] == 0) {
             $allowed = array("jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", "png" => "image/png");
@@ -151,390 +146,276 @@ if(!empty($_POST['current_password']) && !empty($_POST['new_password']) && !empt
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
     <title>Thông tin người dùng</title>
-    <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="css/helper.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/user.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-    <style type="text/css" rel="stylesheet">
-            .indent-small {
-        margin-left: 8px;
-    }
-
-    .form-group.internal {
-        margin-bottom: 10px;
-    }
-
-    .dialog-panel {
-        margin: 15px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .datepicker-dropdown {
-        z-index: 200 !important;
-    }
-
-    .panel-body {
-        background: linear-gradient(to bottom, #e5e5e5, #ffffff);
-        font: 600 15px "Open Sans", Arial, sans-serif;
-        padding: 20px;
-        border-radius: 10px;
-    }
-
-    label.control-label {
-        font-weight: 600;
-        color: #555;
-    }
-
-    table {
-        width: 100%;
-        max-width: 800px;
-        border-collapse: collapse;
-        margin: 30px auto;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    tr:nth-of-type(odd) {
-        background: #f9f9f9;
-    }
-
-    th {
-        background: #004684;
-        color: white;
-        font-weight: bold;
-        text-align: left;
-    }
-
-    td, th {
-        padding: 12px;
-        border: 1px solid #ddd;
-        font-size: 14px;
-    }
-    
-    .user-avatar {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid #004684;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-    
-    .avatar-container {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    #edit-profile-btn {
-        height: 40px;
-        line-height: 40px;
-        border-radius: 4px;
-        border: none;
-        background: #007bff;
-        color: white;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    #edit-profile-btn:hover {
-        background: #0056b3;
-    }
-
-    .btn-logout {
-        background-color: #dc3545;
-        height: 40px;
-        line-height: 40px;
-        text-decoration: none;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-    
-    .btn-logout:hover {
-        background-color: #c82333;
-    }
-    
-    .profile-section {
-        margin-bottom: 30px;
-    }
-    
-    .section-title {
-        color: #004684;
-        border-bottom: 3px solid #004684;
-        padding-bottom: 8px;
-        margin-bottom: 20px;
-        font-size: 18px;
-        font-weight: bold;
-    }
-    
-    .edit-mode {
-        margin-top: 15px;
-    }
-    
-    .password-toggle {
-        cursor: pointer;
-        margin-top: 15px;
-        display: block;
-        color: #004684;
-        text-decoration: underline;
-        font-size: 14px;
-        transition: 0.3s;
-    }
-    
-    .password-toggle:hover {
-        color: #002b5c;
-    }
-    
-    .back-button {
-        display: inline-block;
-        padding: 10px 18px;
-        background-color: #28a745;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        margin-right: 10px;
-        transition: 0.3s;
-    }
-    
-    .back-button:hover {
-        background-color: #218838;
-    }
-    
-    .top-actions {
-        margin-bottom: 20px;
-        text-align: left;
-    }
-    
-    .password-section {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 2px dashed #ccc;
-    }
-
-    /* Edit Profile Form Styling */
-    #edit-profile-form {
-        display: none;
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #edit-profile-form .form-group {
-        margin-bottom: 15px;
-    }
-
-    #edit-profile-form label {
-        font-weight: 600;
-        color: #333;
-    }
-
-    #edit-profile-form input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-    }
-
-    #edit-profile-form button {
-        padding: 10px 15px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    #edit-profile-form .btn-success {
-        background-color: #28a745;
-        color: white;
-    }
-
-    #edit-profile-form .btn-success:hover {
-        background-color: #218838;
-    }
-
-    #edit-profile-form .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    #edit-profile-form .btn-secondary:hover {
-        background-color: #545b62;
-    }
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+        .main-content {
+            flex: 1 0 auto;
+        }
+        footer {
+            margin-top: auto;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #fd4d40, #ff9b44);
+        }
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+        .profile-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 32px;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .user-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fd4d40;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+        .section-title {
+            color: #fd4d40;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        .form-control:focus {
+            border-color: #fd4d40;
+            box-shadow: 0 0 0 0.2rem rgba(253,77,64,.25);
+        }
+        .avatar-upload {
+            margin-bottom: 20px;
+        }
     </style>
-    
-    <script language="javascript" type="text/javascript">
-    function f2() {
-        window.close();
-    }
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.php">
+                <img src="images/logo.png" alt="Logo" height="40">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php"><i class="fas fa-home me-2"></i>Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="restaurants.php"><i class="fas fa-store me-2"></i>Nhà hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="your_orders.php"><i class="fas fa-list me-2"></i>Đơn hàng</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="cart.php" class="nav-link text-white me-3 position-relative">
+                        <i class="fas fa-shopping-cart"></i>
+                        <?php
+                        if(!empty($_SESSION["cart_item"])) {
+                            $cart_count = count(array_keys($_SESSION["cart_item"]));
+                        ?>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                <?php echo $cart_count; ?>
+                            </span>
+                        <?php } ?>
+                    </a>
+                    <div class="dropdown">
+                        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-2"></i>
+                            <?php echo isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : 'Tài khoản'; ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="your_orders.php">
+                                    <i class="fas fa-list me-2"></i>Đơn hàng của tôi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item active" href="userprofile.php">
+                                    <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="logout.php">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    function f3() {
-        window.print();
-    }
-    
-    $(document).ready(function() {
-        // Toggle edit mode for profile
-        $("#edit-profile-btn").click(function() {
-            $("#profile-info").hide();
-            $("#edit-profile-form").show();
-        });
-        
-        $("#cancel-edit").click(function() {
-            $("#edit-profile-form").hide();
-            $("#profile-info").show();
-        });
-        
-        // Toggle password change section
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="profile-card">
+            <div class="text-center">
+                <?php
+                $check_column = mysqli_query($db, "SHOW COLUMNS FROM users LIKE 'avatar'");
+                $avatar_exists = (mysqli_num_rows($check_column) > 0);
+                $avatar = "default_avatar.png";
+                if($avatar_exists && !empty($user_data['avatar'])) {
+                    $avatar = $user_data['avatar'];
+                }
+                if(file_exists("images/avatars/" . $avatar)): ?>
+                    <img src="images/avatars/<?php echo $avatar; ?>" alt="Avatar" class="user-avatar">
+                <?php else: ?>
+                    <img src="images/default_avatar.png" alt="Default Avatar" class="user-avatar">
+                <?php endif; ?>
+                <form method="post" enctype="multipart/form-data" class="avatar-upload">
+                    <input type="file" name="avatar" id="avatar" class="form-control mb-2">
+                    <button type="submit" name="update_avatar" class="btn btn-primary btn-sm">Cập nhật ảnh đại diện</button>
+                </form>
+            </div>
+            <h3 class="section-title text-center">Thông tin cá nhân</h3>
+            <table class="table table-bordered mb-4">
+                <tr>
+                    <th>Ngày đăng ký</th>
+                    <td><?php echo htmlentities($user_data['date']); ?></td>
+                </tr>
+                <tr>
+                    <th>Họ</th>
+                    <td><?php echo htmlentities($user_data['f_name']); ?></td>
+                </tr>
+                <tr>
+                    <th>Tên</th>
+                    <td><?php echo htmlentities($user_data['l_name']); ?></td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><?php echo htmlentities($user_data['email']); ?></td>
+                </tr>
+                <tr>
+                    <th>Số điện thoại</th>
+                    <td><?php echo htmlentities($user_data['phone']); ?></td>
+                </tr>
+                <tr>
+                    <th>Trạng thái</th>
+                    <td>
+                        <?php if($user_data['status']==1) { 
+                            echo "<span class='badge bg-primary'>Đang hoạt động</span>";
+                        } else {
+                            echo "<span class='badge bg-danger'>Bị khóa</span>";
+                        } ?>
+                    </td>
+                </tr>
+            </table>
+            <div class="text-center mb-3">
+                <button id="edit-profile-btn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editProfileModal">Sửa thông tin</button>
+                <a href="logout.php" class="btn btn-logout">Đăng xuất</a>
+            </div>
+            <!-- Modal sửa thông tin cá nhân -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:18px;">
+      <form method="post">
+        <div class="modal-header" style="background: linear-gradient(135deg, #fd4d40, #ff9b44); color: #fff; border-top-left-radius:18px; border-top-right-radius:18px;">
+          <h4 class="modal-title" id="editProfileModalLabel">
+            <i class="fas fa-user-edit me-2"></i>Cập nhật thông tin cá nhân
+          </h4>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body px-4 py-3">
+          <div class="row mb-3">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <label for="f_name" class="form-label fw-bold"><i class="fas fa-user me-2"></i>Họ:</label>
+              <input type="text" class="form-control" id="f_name" name="f_name" value="<?php echo htmlentities($user_data['f_name']); ?>" required>
+            </div>
+            <div class="col-md-6">
+              <label for="l_name" class="form-label fw-bold"><i class="fas fa-user-tag me-2"></i>Tên:</label>
+              <input type="text" class="form-control" id="l_name" name="l_name" value="<?php echo htmlentities($user_data['l_name']); ?>" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label fw-bold"><i class="fas fa-envelope me-2"></i>Email:</label>
+            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlentities($user_data['email']); ?>" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label fw-bold"><i class="fas fa-phone me-2"></i>Số điện thoại:</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlentities($user_data['phone']); ?>" required>
+          </div>
+          <a href="javascript:void(0)" id="toggle-password" class="password-toggle d-block mb-2 text-primary fw-bold">
+            <i class="fas fa-key me-2"></i>Thay đổi mật khẩu
+          </a>
+          <div id="password-section" class="password-section" style="display:none;">
+            <div class="row">
+              <div class="col-md-4 mb-2">
+                <label for="current_password" class="form-label">Mật khẩu hiện tại:</label>
+                <input type="password" class="form-control" id="current_password" name="current_password">
+              </div>
+              <div class="col-md-4 mb-2">
+                <label for="new_password" class="form-label">Mật khẩu mới:</label>
+                <input type="password" class="form-control" id="new_password" name="new_password">
+              </div>
+              <div class="col-md-4 mb-2">
+                <label for="confirm_password" class="form-label">Xác nhận mật khẩu mới:</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-bottom-left-radius:18px; border-bottom-right-radius:18px;">
+          <button type="submit" name="update_profile" class="btn btn-success px-4">
+            <i class="fas fa-save me-2"></i>Lưu thay đổi
+          </button>
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Hủy
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <?php include "include/footer.php"; ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+           $(document).ready(function() {
         $("#toggle-password").click(function() {
             $("#password-section").slideToggle();
         });
     });
     </script>
-</head>
-
-<body>
-    <div class="container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div class="top-actions">
-            <a href="index.php" class="back-button"><i class="fa fa-arrow-left"></i> Trở về trang chủ</a>
-        </div>
-        
-        <div class="avatar-container">
-            <?php
-            // Check if avatar column exists
-            $check_column = mysqli_query($db, "SHOW COLUMNS FROM users LIKE 'avatar'");
-            $avatar_exists = (mysqli_num_rows($check_column) > 0);
-            
-            // Default avatar
-            $avatar = "default_avatar.png";
-            
-            // If avatar column exists and user has an avatar
-            if($avatar_exists && !empty($user_data['avatar'])) {
-                $avatar = $user_data['avatar'];
-            }
-            
-            if(file_exists("images/avatars/" . $avatar)): ?>
-                <img src="images/avatars/<?php echo $avatar; ?>" alt="Avatar" class="user-avatar">
-            <?php else: ?>
-                <img src="images/default_avatar.png" alt="Default Avatar" class="user-avatar">
-            <?php endif; ?>
-            
-            <form method="post" enctype="multipart/form-data">
-                <div style="margin-bottom: 10px;">
-                    <input type="file" name="avatar" id="avatar">
-                </div>
-                <button type="submit" name="update_avatar" class="btn btn-primary">Cập nhật ảnh đại diện</button>
-            </form>
-        </div>
-        
-        <!-- Profile Information Display -->
-        <div id="profile-info">
-            <h3 class="section-title">Thông tin cá nhân</h3>
-            <table>
-                <tr>
-                    <td><b>Ngày đăng ký:</b></td>
-                    <td><?php echo htmlentities($user_data['date']); ?></td>
-                </tr>
-                <tr>
-                    <td><b>Họ:</b></td>
-                    <td><?php echo htmlentities($user_data['f_name']); ?></td>
-                </tr>
-                <tr>
-                    <td><b>Tên:</b></td>
-                    <td><?php echo htmlentities($user_data['l_name']); ?></td>
-                </tr>
-                <tr>
-                    <td><b>Email:</b></td>
-                    <td><?php echo htmlentities($user_data['email']); ?></td>
-                </tr>
-                <tr>
-                    <td><b>Số điện thoại:</b></td>
-                    <td><?php echo htmlentities($user_data['phone']); ?></td>
-                </tr>
-                <tr>
-                    <td><b>Trạng thái:</b></td>
-                    <td>
-                        <?php if($user_data['status']==1) { 
-                            echo "<div class='btn btn-primary'>Đang hoạt động</div>";
-                        } else {
-                            echo "<div class='btn btn-danger'>Bị khóa</div>";
-                        } ?>
-                    </td>
-                </tr>
-            </table>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="edit-profile-btn" class="btn btn-primary">Sửa thông tin</button>
-                <a href="logout.php" class="btn-logout">Đăng xuất</a>
-            </div>
-        </div>
-        
-        <!-- Edit Profile Form -->
-        <div id="edit-profile-form" style="display: none;">
-            <h3 class="section-title">Cập nhật thông tin cá nhân</h3>
-            <form method="post">
-                <div class="form-group">
-                    <label for="f_name">Họ:</label>
-                    <input type="text" class="form-control" id="f_name" name="f_name" value="<?php echo htmlentities($user_data['f_name']); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="l_name">Tên:</label>
-                    <input type="text" class="form-control" id="l_name" name="l_name" value="<?php echo htmlentities($user_data['l_name']); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlentities($user_data['email']); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Số điện thoại:</label>
-                    <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlentities($user_data['phone']); ?>" required>
-                </div>
-                
-                <a href="javascript:void(0)" id="toggle-password" class="password-toggle">Thay đổi mật khẩu</a>
-                
-                <!-- Password Change Section (Hidden by default) -->
-                <div id="password-section" class="password-section" style="display: none;">
-                    <h4>Thay đổi mật khẩu</h4>
-                    <div class="form-group">
-                        <label for="current_password">Mật khẩu hiện tại:</label>
-                        <input type="password" class="form-control" id="current_password" name="current_password">
-                    </div>
-                    <div class="form-group">
-                        <label for="new_password">Mật khẩu mới:</label>
-                        <input type="password" class="form-control" id="new_password" name="new_password">
-                    </div>
-                    <div class="form-group">
-                        <label for="confirm_password">Xác nhận mật khẩu mới:</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password">
-                    </div>
-                </div>
-                
-                <div style="margin-top: 20px; text-align: center;">
-                    <button type="submit" name="update_profile" class="btn btn-success">Lưu thay đổi</button>
-                    <button type="button" id="cancel-edit" class="btn btn-secondary">Hủy</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="js/lib/bootstrap/bootstrap.min.js"></script>
 </body>
 </html>
-<?php } ?>
