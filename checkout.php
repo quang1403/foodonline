@@ -20,8 +20,9 @@ if(empty($_SESSION["user_id"])) {
         if(isset($_POST['submit'])) {
             $dish = mysqli_fetch_assoc(mysqli_query($db, "SELECT rs_id FROM dishes WHERE title = '".$item["title"]."' LIMIT 1"));
             $rs_id = $dish['rs_id'];
-            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price, rs_id, date) 
-                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."', '".$rs_id."', NOW())";
+            $delivery_address = mysqli_real_escape_string($db, $_POST['delivery_address']);
+            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price, rs_id, address, date) 
+                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."', '".$rs_id."', '".$delivery_address."', NOW())";
             mysqli_query($db, $SQL);
         }
     }
@@ -216,6 +217,13 @@ if(empty($_SESSION["user_id"])) {
                 <i class="fas fa-credit-card me-2"></i>Thông tin thanh toán
             </h3>
             <form action="" method="post">
+                <div class="mb-4">
+                    <label for="delivery_address" class="form-label fw-bold">
+                        <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
+                    </label>
+                    <input type="text" class="form-control" id="delivery_address" name="delivery_address"
+                           placeholder="Nhập địa chỉ nhận hàng của bạn" required>
+                </div>
                 <div class="mb-4 px-2">
                     <div style="background: linear-gradient(90deg,#fd4d40,#ff9b44); border-radius: 14px; padding: 24px 32px;">
                         <div class="d-flex justify-content-between align-items-center mb-3">

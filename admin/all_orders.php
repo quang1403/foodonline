@@ -58,6 +58,42 @@ if(empty($_SESSION["adm_id"])) {
             border-radius: 2rem;
             font-size: 0.875rem;
         }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .table-success {
+            transition: background-color 0.3s ease;
+            background-color: #d1e7dd !important;
+        }
+        
+        .modal-body .form-control:focus,
+        .modal-body .form-select:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -278,6 +314,118 @@ if(empty($_SESSION["adm_id"])) {
         </div>
     </div>
 
+    <!-- Modal cập nhật trạng thái -->
+    <div class="modal fade" id="updateOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Cập nhật trạng thái đơn hàng
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateStatusForm">
+                        <input type="hidden" id="updateOrderId" name="order_id">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Thông tin đơn hàng</h6>
+                                <p><strong>Khách hàng:</strong> <span id="updateCustomerName"></span></p>
+                                <p><strong>Món ăn:</strong> <span id="updateDishName"></span></p>
+                                <p><strong>Số lượng:</strong> <span id="updateQuantity"></span></p>
+                                <p><strong>Giá:</strong> <span id="updatePrice"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Trạng thái hiện tại</h6>
+                                <div id="updateCurrentStatus"></div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="newStatus" class="form-label">Trạng thái mới <span class="text-danger">*</span></label>
+                                <select name="status" id="newStatus" class="form-select" required>
+                                    <option value="">Chọn trạng thái</option>
+                                    <option value="preparing">
+                                        <i class="fas fa-hourglass-half"></i> Đang chuẩn bị
+                                    </option>
+                                    <option value="prepared">
+                                        <i class="fas fa-check"></i> Đã chuẩn bị
+                                    </option>
+                                    <option value="in process">
+                                        <i class="fas fa-motorcycle"></i> Đang giao
+                                    </option>
+                                    <option value="closed">
+                                        <i class="fas fa-check-circle"></i> Đã giao
+                                    </option>
+                                    <option value="rejected">
+                                        <i class="fas fa-times-circle"></i> Đã hủy
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="updateRemark" class="form-label">Ghi chú <span class="text-danger">*</span></label>
+                            <textarea name="remark" id="updateRemark" class="form-control" rows="4" 
+                                      placeholder="Nhập ghi chú về việc cập nhật trạng thái..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="button" class="btn btn-success" id="saveStatusUpdate">
+                        <i class="fas fa-save me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal Thông tin khách hàng (đẹp hơn) -->
+        <div class="modal fade" id="userProfileModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content p-0" style="border-radius: 15px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.12);">
+                    <div class="card-header text-white d-flex align-items-center" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); border-radius: 15px 15px 0 0 !important; padding: 20px;">
+                        <i class="fas fa-user-circle profile-icon me-3" style="font-size:2.5rem;color:#fff;"></i>
+                        <h4 class="mb-0">Thông tin khách hàng</h4>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="card-body p-4" style="background: rgba(255,255,255,0.98); border-radius: 0 0 15px 15px;">
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-4 label-text">Họ tên:</div>
+                            <div class="col-8 value-text" id="upFullName"></div>
+                        </div>
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-4 label-text">Tên đăng nhập:</div>
+                            <div class="col-8 value-text" id="upUsername"></div>
+                        </div>
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-4 label-text">Email:</div>
+                            <div class="col-8 value-text" id="upEmail"></div>
+                        </div>
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-4 label-text">Số điện thoại:</div>
+                            <div class="col-8 value-text" id="upPhone"></div>
+                        </div>
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-4 label-text">Ngày đăng ký:</div>
+                            <div class="col-8 value-text" id="upDate"></div>
+                        </div>
+                        <div class="row mb-2 align-items-center">
+                            <div class="col-4 label-text">Trạng thái:</div>
+                            <div class="col-8" id="upStatus"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -337,15 +485,181 @@ if(empty($_SESSION["adm_id"])) {
             // Handle status update button
             $('.update-status').click(function() {
                 const orderId = $(this).data('id');
-                window.open(`order_update.php?form_id=${orderId}`, 'Update Status', 
-                    'width=800,height=600,left=200,top=200');
+                
+                // Load order details for update modal
+                $.ajax({
+                    url: 'get_order.php',
+                    type: 'GET',
+                    data: {id: orderId},
+                    success: function(response) {
+                        if (response.error) {
+                            alert(response.error);
+                            return;
+                        }
+                        
+                        const data = response.data;
+                        
+                        // Populate update modal
+                        $('#updateOrderId').val(orderId);
+                        $('#updateCustomerName').text(data.username);
+                        $('#updateDishName').text(data.title);
+                        $('#updateQuantity').text(data.quantity);
+                        $('#updatePrice').text(data.formatted_price);
+                        
+                        // Show current status
+                        let statusHtml = getStatusBadge(data.status);
+                        $('#updateCurrentStatus').html(statusHtml);
+                        
+                        // Reset form
+                        $('#newStatus').val('');
+                        $('#updateRemark').val('');
+                        
+                        // Hide view modal and show update modal
+                        $('#viewOrderModal').modal('hide');
+                        $('#updateOrderModal').modal('show');
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Không thể tải thông tin đơn hàng: ' + error);
+                    }
+                });
             });
+
+            // Handle save status update
+            $('#saveStatusUpdate').click(function() {
+                const formData = {
+                    order_id: parseInt($('#updateOrderId').val()),
+                    status: $('#newStatus').val(),
+                    remark: $('#updateRemark').val().trim()
+                };
+                
+                // Validate form
+                if(!formData.status) {
+                    alert('Vui lòng chọn trạng thái mới!');
+                    $('#newStatus').focus();
+                    return;
+                }
+                
+                if(!formData.remark) {
+                    alert('Vui lòng nhập ghi chú!');
+                    $('#updateRemark').focus();
+                    return;
+                }
+                
+                // Confirm update
+                if(!confirm('Bạn có chắc muốn cập nhật trạng thái đơn hàng này?')) {
+                    return;
+                }
+                
+                // Show loading
+                const $saveBtn = $('#saveStatusUpdate');
+                const originalText = $saveBtn.html();
+                $saveBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang cập nhật...').prop('disabled', true);
+                
+                // Send AJAX request
+                $.ajax({
+                    url: 'update_order_status.php',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if(response.success) {
+                            // Show success message
+                            showNotification('success', 'Cập nhật trạng thái thành công!');
+                            
+                            // Update the table row
+                            updateTableRow(formData.order_id, response.data);
+                            
+                            // Close modal
+                            $('#updateOrderModal').modal('hide');
+                        } else {
+                            alert('Lỗi: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Không thể cập nhật trạng thái: ' + error);
+                    },
+                    complete: function() {
+                        // Restore button
+                        $saveBtn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
+
+            // Function to update table row after status change
+            function updateTableRow(orderId, data) {
+                const $row = $(`a[data-id="${orderId}"]`).closest('tr');
+                if($row.length) {
+                    // Update status column
+                    const statusHtml = getStatusBadge(data.new_status);
+                    $row.find('td:eq(5)').html(statusHtml);
+                    
+                    // Add visual feedback
+                    $row.addClass('table-success');
+                    setTimeout(() => {
+                        $row.removeClass('table-success');
+                    }, 2000);
+                }
+            }
+
+            // Function to show notification
+            function showNotification(type, message) {
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+                
+                const notification = $(`
+                    <div class="alert ${alertClass} alert-dismissible fade show notification" role="alert">
+                        <i class="fas fa-${icon} me-2"></i>${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `);
+                
+                // Add to top of container
+                $('.container-fluid').prepend(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    notification.alert('close');
+                }, 5000);
+            }
 
             // Handle view user button
             $('.view-user').click(function() {
                 const orderId = $(this).data('id');
-                window.open(`userprofile.php?newform_id=${orderId}`, 'User Profile', 
-                    'width=800,height=600,left=200,top=200');
+                // Gọi AJAX lấy thông tin khách hàng
+                $.ajax({
+                    url: 'get_userprofile.php',
+                    type: 'GET',
+                    data: {order_id: orderId},
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.success) {
+                            const user = response.data;
+                            $('#upFullName').text(user.f_name + ' ' + user.l_name);
+                            $('#upUsername').text(user.username);
+                            $('#upEmail').text(user.email);
+                            $('#upPhone').text(user.phone);
+                            $('#upDate').text(user.date);
+                            if(user.status == 1) {
+                                $('#upStatus').html('<span class="badge bg-primary status-badge ms-2">Hoạt động</span>');
+                            } else {
+                                $('#upStatus').html('<span class="badge bg-danger status-badge ms-2">Đã khóa</span>');
+                            }
+                            // Ẩn modal đơn hàng trước khi hiện modal khách hàng
+                            $('#viewOrderModal').modal('hide');
+                            $('#userProfileModal').modal('show');
+                        } else {
+                            alert('Không tìm thấy thông tin khách hàng!');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Lỗi khi lấy thông tin khách hàng: ' + error);
+                    }
+                });
+            });
+
+            // Khi đóng modal khách hàng, tự động mở lại modal đơn hàng nếu modal đơn hàng đang ẩn
+            $('#userProfileModal').on('hidden.bs.modal', function () {
+                $('#viewOrderModal').modal('show');
             });
 
             // Helper function for status badge

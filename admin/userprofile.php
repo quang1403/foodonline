@@ -4,197 +4,128 @@
 include("../connection/connect.php");
 error_reporting(0);
 session_start();
-if(strlen($_SESSION['user_id'])==0)
-  { 
-header('location:../login.php');
+
+if(empty($_SESSION["adm_id"])) {
+    header('location:index.php');
+    exit();
 }
-else
-{
-  if(isset($_POST['update']))
-  {
-$form_id=$_GET['form_id'];
-$status=$_POST['status'];
-$remark=$_POST['remark'];
-$query=mysqli_query($db,"insert into remark(frm_id,status,remark) values('$form_id','$status','$remark')");
-$sql=mysqli_query($db,"update users_orders set status='$status' where o_id='$form_id'");
 
-echo "<script>alert('form details updated successfully');</script>";
-
-  }
-
- ?>
-                <script language="javascript" type="text/javascript">
-function f2() {
-    window.close();
+$order_id = isset($_GET['newform_id']) ? intval($_GET['newform_id']) : 0;
+if($order_id <= 0) {
+    echo "<script>alert('ID đơn hàng không hợp lệ'); window.close();</script>";
+    exit();
 }
-ser
 
-function f3() {
-    window.print();
-}
-                </script>
+$ret1 = mysqli_query($db, "SELECT * FROM users_orders WHERE o_id='$order_id'");
+$ro = mysqli_fetch_array($ret1);
+$ret2 = mysqli_query($db, "SELECT * FROM users WHERE u_id='".$ro['u_id']."'");
+$user = mysqli_fetch_array($ret2);
 
-
-                <head>
-                    <meta charset="utf-8">
-                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <meta name="description" content="">
-                    <meta name="author" content="">
-                    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
-                    <title>User Profile</title>
-                    <link href="css/lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-                    <link href="css/helper.css" rel="stylesheet">
-                    <link href="css/style.css" rel="stylesheet">
-                    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
-                    <style type="text/css" rel="stylesheet">
-                    .indent-small {
-                        margin-left: 5px;
-                    }
-
-                    .form-group.internal {
-                        margin-bottom: 0;
-                    }
-
-                    .dialog-panel {
-                        margin: 10px;
-                    }
-
-                    .datepicker-dropdown {
-                        z-index: 200 !important;
-                    }
-
-                    .panel-body {
-                        background: #e5e5e5;
-                        background: -moz-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-                        background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #e5e5e5), color-stop(100%, #ffffff));
-                        background: -webkit-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-                        background: -o-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-                        background: -ms-radial-gradient(center, ellipse cover, #e5e5e5 0%, #ffffff 100%);
-                        background: radial-gradient(ellipse at center, #e5e5e5 0%, #ffffff 100%);
-                        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e5e5e5', endColorstr='#ffffff', GradientType=1);
-                        font: 600 15px "Open Sans", Arial, sans-serif;
-                    }
-
-                    label.control-label {
-                        font-weight: 600;
-                        color: #777;
-                    }
-
-                    table {
-                        width: 650px;
-                        border-collapse: collapse;
-                        margin: auto;
-                        margin-top: 50px;
-                    }
-
-                    tr:nth-of-type(odd) {
-                        background: #eee;
-                    }
-
-                    th {
-                        background: #004684;
-                        color: white;
-                        font-weight: bold;
-                    }
-
-                    td,
-                    th {
-                        padding: 10px;
-                        border: 1px solid #ccc;
-                        text-align: left;
-                        font-size: 14px;
-                    }
-                    </style>
-                </head>
-
-                <body>
-
-                    <div style="margin-left:50px;">
-                        <form name="updateticket" id="updatecomplaint" method="post">
-
-
-
-
-                            <table border="0" cellspacing="0" cellpadding="0">
-
-                                <?php 
-
-$ret1=mysqli_query($db,"select * FROM users_orders where o_id='".$_GET['newform_id']."'");
-$ro=mysqli_fetch_array($ret1);
-$ret2=mysqli_query($db,"select * FROM users where u_id='".$ro['u_id']."'");
-
-while($row=mysqli_fetch_array($ret2))
-{
 ?>
-
-
-
-
-                                <tr>
-                                    <td colspan="2"><b><?php echo $row['f_name'];?>'s profile</b></td>
-
-                                </tr>
-
-
-                                <tr>
-                                    <td>&nbsp;</td>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr height="50">
-                                    <td><b>Reg Date:</b></td>
-                                    <td><?php echo htmlentities($row['date']); ?></td>
-                                </tr>
-
-                                <tr height="50">
-                                    <td><b>First Name:</b></td>
-                                    <td><?php echo htmlentities($row['f_name']); ?></td>
-                                </tr>
-                                <tr height="50">
-                                    <td><b>Last Name:</b></td>
-                                    <td><?php echo htmlentities($row['l_name']); ?></td>
-                                </tr>
-
-
-
-                                <tr height="50">
-                                    <td><b>User Email:</b></td>
-                                    <td><?php echo htmlentities($row['email']); ?></td>
-                                </tr>
-
-                                <tr height="50">
-                                    <td><b>User Phone:</b></td>
-                                    <td><?php echo htmlentities($row['phone']); ?></td>
-                                </tr>
-
-                                <tr height="50">
-                                    <td><b>Status:</b></td>
-                                    <td><?php if($row['status']==1)
-      { echo "<div class='btn btn-primary'>Active</div>";
-} else{
-  echo "<div class='btn btn-danger'>Block</div>";
-}
-        ?></td>
-                                </tr>
-
-                                <tr>
-
-                                    <td colspan="2">
-                                        <input name="Submit2" type="submit" class="btn btn-danger" value="Đóng " onClick="return f2();" style="cursor: pointer;" />
-                                    </td>
-                                </tr>
-
-                                <?php } 
-
- 
-    ?>
-                            </table>
-                        </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thông tin khách hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+        }
+        .profile-icon {
+            font-size: 2.5rem;
+            color: #4e73df;
+        }
+        .info-row {
+            border-bottom: 1px solid #e3e6f0;
+            padding: 15px 0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label-text {
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        .value-text {
+            color: #3a3b45;
+            font-weight: 500;
+        }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .btn-close {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container animate-fade-in">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="card mt-5">
+                    <div class="card-header text-white d-flex align-items-center">
+                        <i class="fas fa-user-circle profile-icon me-3"></i>
+                        <h4 class="mb-0">Thông tin khách hàng</h4>
+                        <button type="button" class="btn-close btn-close-white ms-auto" onclick="window.close()"></button>
                     </div>
-
-                </body>
-
-                </html>
-
-                <?php } ?> 
+                    <div class="card-body p-4">
+                        <div class="info-row">
+                            <span class="label-text">Họ tên:</span>
+                            <span class="value-text ms-2"><?php echo htmlentities($user['f_name'] . ' ' . $user['l_name']); ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">Tên đăng nhập:</span>
+                            <span class="value-text ms-2"><?php echo htmlentities($user['username']); ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">Email:</span>
+                            <span class="value-text ms-2"><?php echo htmlentities($user['email']); ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">Số điện thoại:</span>
+                            <span class="value-text ms-2"><?php echo htmlentities($user['phone']); ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">Ngày đăng ký:</span>
+                            <span class="value-text ms-2"><?php echo date('d/m/Y', strtotime($user['date'])); ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label-text">Trạng thái:</span>
+                            <?php if($user['status']==1) { ?>
+                                <span class="badge bg-primary status-badge ms-2">Hoạt động</span>
+                            <?php } else { ?>
+                                <span class="badge bg-danger status-badge ms-2">Đã khóa</span>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
