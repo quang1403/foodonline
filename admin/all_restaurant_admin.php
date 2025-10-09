@@ -215,6 +215,60 @@ if(empty($_SESSION["adm_id"])) {
         </div>
     </div>
 
+    <!-- Edit Admin Modal -->
+    <div class="modal fade" id="editAdminModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sửa Admin nhà hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAdminForm">
+                        <input type="hidden" name="id" id="edit_id">
+                        <div class="mb-3">
+                            <label>Nhà hàng</label>
+                            <select name="rs_id" id="edit_rs_id" class="form-select" required>
+                                <option value="">Chọn nhà hàng</option>
+                                <?php
+                                $sql = "SELECT rs_id, title FROM restaurant ORDER BY title";
+                                $result = mysqli_query($db, $sql);
+                                while($row = mysqli_fetch_array($result)) {
+                                    echo '<option value="'.$row['rs_id'].'">'.$row['title'].'</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tên Admin</label>
+                            <input type="text" name="name" id="edit_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Username</label>
+                            <input type="text" name="username" id="edit_username" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Password (để trống nếu không đổi)</label>
+                            <input type="password" name="password" id="edit_password" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" name="email" id="edit_email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Số điện thoại</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="updateAdmin">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -257,6 +311,76 @@ if(empty($_SESSION["adm_id"])) {
             $('#addAdminForm').on('submit', function(e) {
                 e.preventDefault();
                 $('#saveAdmin').click();
+            });
+
+            // Sửa admin
+            $(document).on('click', '.edit-admin', function() {
+                var id = $(this).data('id');
+                $.ajax({
+                    url: 'get_restaurant_admin.php',
+                    type: 'GET',
+                    data: {id: id},
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#edit_id').val(data.id);
+                        $('#edit_rs_id').val(data.rs_id);
+                        $('#edit_name').val(data.name);
+                        $('#edit_username').val(data.username);
+                        $('#edit_email').val(data.email);
+                        $('#edit_phone').val(data.phone);
+                        $('#edit_password').val('');
+                        $('#editAdminModal').modal('show');
+                    },
+                    error: function(xhr) {
+                        alert('Không lấy được dữ liệu admin');
+                    }
+                });
+            });
+
+            // Cập nhật admin
+            $('#updateAdmin').click(function() {
+                $.ajax({
+                    url: 'edit_restaurant_admin.php',
+                    type: 'POST',
+                    data: $('#editAdminForm').serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.success) {
+                            $('#editAdminModal').modal('hide');
+                            alert('Cập nhật thành công!');
+                            location.reload();
+                        } else {
+                            alert(response.message || 'Có lỗi xảy ra');
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Lỗi cập nhật');
+                    }
+                });
+            });
+
+            // Xóa admin
+            $(document).on('click', '.delete-admin', function() {
+                if(confirm('Bạn có chắc chắn muốn xóa admin này?')) {
+                    var id = $(this).data('id');
+                    $.ajax({
+                        url: 'delete_restaurant_admin.php',
+                        type: 'POST',
+                        data: {id: id},
+                        dataType: 'json',
+                        success: function(response) {
+                            if(response.success) {
+                                alert('Xóa thành công!');
+                                location.reload();
+                            } else {
+                                alert(response.message || 'Có lỗi xảy ra');
+                            }
+                        },
+                        error: function(xhr) {
+                            alert('Lỗi xóa admin');
+                        }
+                    });
+                }
             });
         });
     </script>

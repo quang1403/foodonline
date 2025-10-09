@@ -125,7 +125,7 @@ $_SESSION["res_id"] = $res_id;
                                 </thead>
                                 <tbody>
 <?php
-$query_res = mysqli_query($db,"SELECT uo.*, u.username, u.address 
+$query_res = mysqli_query($db,"SELECT uo.*, u.username 
     FROM users_orders uo
     JOIN users u ON uo.u_id = u.u_id
     WHERE uo.rs_id='$res_id'

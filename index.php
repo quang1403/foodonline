@@ -245,7 +245,7 @@ session_start();
             </div>
             <div class="row g-4">
                 <?php 
-                // Updated query to get most sold dishes
+                // Lấy 20 món bán chạy nhất, sắp xếp giảm dần theo số lượng bán
                 $popular_foods = mysqli_query($db,"
                     SELECT 
                         d.*,
@@ -255,10 +255,10 @@ session_start();
                     FROM dishes d
                     INNER JOIN restaurant r ON d.rs_id = r.rs_id
                     INNER JOIN users_orders uo ON uo.title = d.title
-                    WHERE uo.status = 'closed'  -- Only count completed orders
+                    WHERE uo.status = 'closed'
                     GROUP BY d.d_id, d.title, r.title, d.slogan, d.price, d.img, d.rs_id
                     ORDER BY total_quantity DESC
-                    LIMIT 8
+                    LIMIT 6
                 ");
 
                 if(mysqli_num_rows($popular_foods) > 0) {
