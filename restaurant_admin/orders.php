@@ -142,8 +142,13 @@ if(!mysqli_num_rows($query_res)) {
             <td>'.number_format($row['price'], 0, ',', '.').' VNĐ</td>
             <td>'.htmlspecialchars($row['address']).'</td>';
 
-        // Status badge
+        // Hiển thị trạng thái hiện tại và trạng thái chờ phê duyệt
         $status = $row['status'];
+        $pending_status = $row['pending_status'];
+        
+        echo '<td>';
+        
+        // Trạng thái hiện tại
         $badge_class = '';
         $status_text = '';
         $icon = '';
@@ -153,6 +158,16 @@ if(!mysqli_num_rows($query_res)) {
                 $badge_class = 'bg-info';
                 $status_text = 'Chờ xác nhận';
                 $icon = 'clock';
+                break;
+            case 'preparing':
+                $badge_class = 'bg-secondary';
+                $status_text = 'Đang chuẩn bị';
+                $icon = 'hourglass-half';
+                break;
+            case 'prepared':
+                $badge_class = 'bg-primary';
+                $status_text = 'Đã chuẩn bị';
+                $icon = 'check';
                 break;
             case 'in process':
                 $badge_class = 'bg-warning';
@@ -170,16 +185,61 @@ if(!mysqli_num_rows($query_res)) {
                 $icon = 'times-circle';
                 break;
         }
-        echo '<td><span class="badge '.$badge_class.' status-badge">
+        echo '<span class="badge '.$badge_class.' status-badge">
                 <i class="fas fa-'.$icon.' me-1"></i>'.$status_text.'
-              </span></td>';
+              </span>';
+        
+        // Nếu có trạng thái chờ phê duyệt
+        if(!empty($pending_status) && $pending_status != $status) {
+            $pending_badge_class = '';
+            $pending_status_text = '';
+            $pending_icon = '';
+            switch($pending_status) {
+                case 'preparing':
+                    $pending_badge_class = 'bg-secondary';
+                    $pending_status_text = 'Đang chuẩn bị';
+                    $pending_icon = 'hourglass-half';
+                    break;
+                case 'prepared':
+                    $pending_badge_class = 'bg-primary';
+                    $pending_status_text = 'Đã chuẩn bị';
+                    $pending_icon = 'check';
+                    break;
+                case 'in process':
+                    $pending_badge_class = 'bg-warning';
+                    $pending_status_text = 'Đang giao';
+                    $pending_icon = 'motorcycle';
+                    break;
+                case 'closed':
+                    $pending_badge_class = 'bg-success';
+                    $pending_status_text = 'Đã giao';
+                    $pending_icon = 'check-circle';
+                    break;
+                case 'rejected':
+                    $pending_badge_class = 'bg-danger';
+                    $pending_status_text = 'Đã hủy';
+                    $pending_icon = 'times-circle';
+                    break;
+            }
+            echo '<br><small class="text-muted">Chờ phê duyệt:</small><br>
+                  <span class="badge '.$pending_badge_class.' status-badge">
+                    <i class="fas fa-'.$pending_icon.' me-1"></i>'.$pending_status_text.'
+                  </span>';
+        }
+        
+        echo '</td>';
 
         echo '<td>'.date('d/m/Y H:i', strtotime($row['date'])).'</td>
-            <td>
-                <button class="btn btn-primary btn-sm update-status" data-id="'.$row['o_id'].'">
+            <td>';
+        
+        // Chỉ cho phép cập nhật nếu chưa hoàn thành/hủy
+        if($status != 'closed' && $status != 'rejected') {
+            echo '<button class="btn btn-primary btn-sm update-status" data-id="'.$row['o_id'].'">
                     <i class="fas fa-edit"></i>
-                </button>
-            </td>
+                  </button>';
+        }
+        
+        echo '</td>
         </tr>';
     }
 }
@@ -202,12 +262,18 @@ if(!mysqli_num_rows($query_res)) {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Trạng thái sẽ được gửi đến admin để phê duyệt trước khi hiển thị cho khách hàng.
+                    </div>
                     <form id="updateStatusForm">
                         <input type="hidden" name="order_id" id="order_id">
                         <div class="mb-3">
-                            <label class="form-label">Trạng thái</label>
-                            <select name="status" class="form-select" required>
-                                <option value="">Chờ xác nhận</option>
+                            <label class="form-label">Trạng thái mới</label>
+                            <select name="status" id="status" class="form-select" required>
+                                <option value="">-- Chọn trạng thái --</option>
+                                <option value="preparing">Đang chuẩn bị</option>
+                                <option value="prepared">Đã chuẩn bị</option>
                                 <option value="in process">Đang giao</option>
                                 <option value="closed">Đã giao</option>
                                 <option value="rejected">Đã hủy</option>
@@ -217,7 +283,7 @@ if(!mysqli_num_rows($query_res)) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn btn-primary" id="saveStatus">Lưu</button>
+                    <button type="button" class="btn btn-primary" id="saveStatus">Gửi yêu cầu</button>
                 </div>
             </div>
         </div>
@@ -229,38 +295,64 @@ if(!mysqli_num_rows($query_res)) {
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#orderTable').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
-                },
-                order: [[6, 'desc']]
-            });
+$(document).ready(function() {
+    $('#orderTable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+        },
+        order: [[6, 'desc']]
+    });
 
-            // Handle update status button
-            $('.update-status').click(function() {
-                const orderId = $(this).data('id');
-                $('#order_id').val(orderId);
-                $('#updateStatusModal').modal('show');
-            });
+    // Handle update status button - sử dụng event delegation
+    $(document).on('click', '.update-status', function() {
+        const orderId = $(this).data('id');
+        console.log('Order ID:', orderId); // Debug
+        $('#order_id').val(orderId);
+        $('#updateStatusModal').modal('show');
+    });
 
-            // Handle save status
-            $('#saveStatus').click(function() {
-                $.ajax({
-                    url: 'update_order_status.php',
-                    type: 'POST',
-                    data: $('#updateStatusForm').serialize(),
-                    success: function(response) {
-                        if(response.success) {
-                            alert('Cập nhật trạng thái thành công!');
-                            location.reload();
-                        } else {
-                            alert(response.message || 'Có lỗi xảy ra');
-                        }
-                    }
-                });
-            });
+    // Handle save status
+    $('#saveStatus').click(function() {
+        const $btn = $(this);
+        const originalText = $btn.text();
+        const formData = $('#updateStatusForm').serialize();
+        
+        console.log('Form data:', formData); // Debug
+        
+        // Kiểm tra form validation
+        const status = $('select[name="status"]').val();
+        if(!status) {
+            alert('Vui lòng chọn trạng thái!');
+            return;
+        }
+        
+        $btn.text('Đang gửi...').prop('disabled', true);
+        
+        $.ajax({
+            url: 'update_order_status.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                console.log('Response:', response); // Debug
+                if(response.success) {
+                    alert(response.message);
+                    $('#updateStatusModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Có lỗi xảy ra'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('AJAX Error:', xhr.responseText); // Debug
+                alert('Có lỗi xảy ra khi gửi yêu cầu: ' + error);
+            },
+            complete: function() {
+                $btn.text(originalText).prop('disabled', false);
+            }
         });
+    });
+});
     </script>
 </body>
 </html>

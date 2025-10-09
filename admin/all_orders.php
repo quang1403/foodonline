@@ -167,21 +167,30 @@ if(empty($_SESSION["adm_id"])) {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $sql = "SELECT users.*, users_orders.* FROM users INNER JOIN users_orders ON users.u_id=users_orders.u_id ";
+                                    $sql = "SELECT users.*, users_orders.*, restaurant.title as restaurant_name FROM users 
+                                            INNER JOIN users_orders ON users.u_id=users_orders.u_id 
+                                            LEFT JOIN restaurant ON users_orders.rs_id=restaurant.rs_id
+                                            ORDER BY users_orders.date DESC";
                                     $query = mysqli_query($db, $sql);
                                     
                                     if(!mysqli_num_rows($query) > 0) {
-                                        echo '<tr><td colspan="8" class="text-center">Không có đơn hàng!</td></tr>';
+                                        echo '<tr><td colspan="9" class="text-center">Không có đơn hàng!</td></tr>';
                                     } else {
                                         while($rows = mysqli_fetch_array($query)) {
-                                            echo '<tr>
+                                            $has_pending = !empty($rows['pending_status']) && $rows['pending_status'] != $rows['status'];
+                                            $row_class = $has_pending ? 'table-warning' : '';
+                                            
+                                            echo '<tr class="'.$row_class.'">
                                                 <td>'.$rows['username'].'</td>
                                                 <td>'.$rows['title'].'</td>
                                                 <td>'.$rows['quantity'].'</td>
                                                 <td>'.number_format($rows['price'], 0, ',', '.').' VNĐ</td>
                                                 <td>'.$rows['address'].'</td>';
                                             
-                                            // Status badge
+                                            // Status badge - hiển thị cả trạng thái hiện tại và chờ phê duyệt
+                                            echo '<td>';
+                                            
+                                            // Trạng thái hiện tại
                                             $status = $rows['status'];
                                             $badge_class = '';
                                             $status_text = '';
@@ -189,6 +198,7 @@ if(empty($_SESSION["adm_id"])) {
                                             
                                             switch($status) {
                                                 case '':
+                                                case 'NULL':
                                                     $badge_class = 'bg-info';
                                                     $status_text = 'Chờ xác nhận';
                                                     $icon = 'clock';
@@ -220,18 +230,77 @@ if(empty($_SESSION["adm_id"])) {
                                                     break;
                                             }
                                             
-                                            echo '<td><span class="badge '.$badge_class.' status-badge">
+                                            echo '<span class="badge '.$badge_class.' status-badge">
                                                     <i class="fas fa-'.$icon.' me-1"></i>'.$status_text.'
-                                                  </span></td>';
+                                                  </span>';
+                                            
+                                            // Nếu có trạng thái chờ phê duyệt
+                                            if($has_pending) {
+                                                $pending_status = $rows['pending_status'];
+                                                $pending_badge_class = '';
+                                                $pending_status_text = '';
+                                                $pending_icon = '';
+                                                
+                                                switch($pending_status) {
+                                                    case 'preparing':
+                                                        $pending_badge_class = 'bg-secondary';
+                                                        $pending_status_text = 'Đang chuẩn bị';
+                                                        $pending_icon = 'hourglass-half';
+                                                        break;
+                                                    case 'prepared':
+                                                        $pending_badge_class = 'bg-primary';
+                                                        $pending_status_text = 'Đã chuẩn bị';
+                                                        $pending_icon = 'check';
+                                                        break;
+                                                    case 'in process':
+                                                        $pending_badge_class = 'bg-warning';
+                                                        $pending_status_text = 'Đang giao';
+                                                        $pending_icon = 'motorcycle';
+                                                        break;
+                                                    case 'closed':
+                                                        $pending_badge_class = 'bg-success';
+                                                        $pending_status_text = 'Đã giao';
+                                                        $pending_icon = 'check-circle';
+                                                        break;
+                                                    case 'rejected':
+                                                        $pending_badge_class = 'bg-danger';
+                                                        $pending_status_text = 'Đã hủy';
+                                                        $pending_icon = 'times-circle';
+                                                        break;
+                                                }
+                                                
+                                                echo '<br><small class="text-muted">Chờ phê duyệt:</small><br>
+                                                      <span class="badge '.$pending_badge_class.' status-badge">
+                                                        <i class="fas fa-'.$pending_icon.' me-1"></i>'.$pending_status_text.'
+                                                      </span>';
+                                            }
+                                            
+                                            echo '</td>';
                                             
                                             echo '<td>'.$rows['date'].'</td>
                                                 <td>
                                                     <a href="#" class="btn btn-primary btn-sm" data-id="'.$rows['o_id'].'">
                                                         <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="delete_orders.php?order_del='.$rows['o_id'].'" 
+                                                    </a>';
+                                            
+                                            // Nút phê duyệt nếu có trạng thái chờ
+                                            if($has_pending) {
+                                                echo '<button class="btn btn-success btn-sm approve-status ms-1" 
+                                                            data-id="'.$rows['o_id'].'" 
+                                                            data-status="'.$rows['pending_status'].'"
+                                                            title="Phê duyệt trạng thái">
+                                                        <i class="fas fa-check"></i>
+                                                      </button>
+                                                      <button class="btn btn-warning btn-sm reject-pending ms-1" 
+                                                            data-id="'.$rows['o_id'].'"
+                                                            title="Từ chối phê duyệt">
+                                                        <i class="fas fa-times"></i>
+                                                      </button>';
+                                            }
+                                            
+                                            echo '<a href="delete_orders.php?order_del='.$rows['o_id'].'" 
                                                        onclick="return confirm(\'Bạn có chắc muốn xóa đơn hàng này?\')" 
-                                                       class="btn btn-danger btn-sm">
+                                                       class="btn btn-danger btn-sm ms-1">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
                                                 </td>
@@ -705,8 +774,69 @@ if(empty($_SESSION["adm_id"])) {
                             <i class="fas fa-${icon} me-1"></i>${status_text}
                         </span>`;
             }
-        });
-    </script>
-</body>
-</html>
-<?php } ?>
+            
+            // Handle approve status
+            $(document).on('click', '.approve-status', function(e) {
+                e.preventDefault();
+                const orderId = $(this).data('id');
+                
+                if(confirm('Bạn có chắc muốn phê duyệt trạng thái này?')) {
+                    $.ajax({
+                        url: 'approve_order_status.php',
+                        type: 'POST',
+                        data: {
+                            order_id: orderId,
+                            action: 'approve'
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if(response.success) {
+                                                                alert('Đã phê duyệt trạng thái thành công!');
+                                                                location.reload();
+                                                            } else {
+                                                                alert('Lỗi: ' + response.message);
+                                                            }
+                                                        },
+                                                        error: function(xhr, status, error) {
+                                                            alert('Không thể phê duyệt trạng thái: ' + error);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            
+                                            // Handle reject pending status
+                                            $(document).on('click', '.reject-pending', function(e) {
+                                                e.preventDefault();
+                                                const orderId = $(this).data('id');
+                                                
+                                                if(confirm('Bạn có chắc muốn từ chối cập nhật trạng thái này?')) {
+                                                    $.ajax({
+                                                        url: 'approve_order_status.php',
+                                                        type: 'POST',
+                                                        data: {
+                                                            order_id: orderId,
+                                                            action: 'reject'
+                                                        },
+                                                        dataType: 'json',
+                                                        success: function(response) {
+                                                            if(response.success) {
+                                                                alert('Đã từ chối cập nhật trạng thái!');
+                                                                location.reload();
+                                                            } else {
+                                                                alert('Lỗi: ' + response.message);
+                                                            }
+                                                        },
+                                                        error: function(xhr, status, error) {
+                                                            alert('Không thể từ chối cập nhật: ' + error);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        });
+                                    </script>
+                                </body>
+                                </html>
+                                <?php
+                                }
+                                ?>
+                           
