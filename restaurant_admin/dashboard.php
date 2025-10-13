@@ -171,11 +171,19 @@ $res_id = $_SESSION["res_id"];
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0">Món ăn bán chạy</h5>
+                                    <h5 class="mb-0">Món ăn bán chạy</h5>
+                                    <div class="mt-2">
+                                        <button class="btn btn-success btn-sm me-2" id="exportExcel">
+                                            <i class="fas fa-file-excel me-1"></i> Xuất Excel
+                                        </button>
+                                        <button class="btn btn-info btn-sm" id="printTable">
+                                            <i class="fas fa-print me-1"></i> In
+                                        </button>
+                                    </div>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table">
+                                    <table class="table" id="banchayTable">
                                         <thead>
                                             <tr>
                                                 <th>Món ăn</th>
@@ -268,5 +276,20 @@ $res_id = $_SESSION["res_id"];
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script>
+        document.getElementById('exportExcel').onclick = function() {
+            var wb = XLSX.utils.table_to_book(document.getElementById('banchayTable'), {sheet: "BanChay"});
+            XLSX.writeFile(wb, 'monan_banchay.xlsx');
+        };
+        document.getElementById('printTable').onclick = function() {
+            var printContents = document.getElementById('banchayTable').outerHTML;
+            var originalContents = document.body.innerHTML;
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+            location.reload();
+        };
+        </script>
 </body>
 </html>

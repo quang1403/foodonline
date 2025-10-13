@@ -238,6 +238,11 @@ if(!mysqli_num_rows($query_res)) {
                     <i class="fas fa-edit"></i>
                   </button>';
         }
+
+                    // Nút xem chi tiết luôn hiển thị, đặt cạnh nút cập nhật trạng thái
+                    echo ' <button class="btn btn-info btn-sm view-order" data-id="'.$row['o_id'].'" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>';
         
         echo '</td>
         </tr>';
@@ -252,6 +257,29 @@ if(!mysqli_num_rows($query_res)) {
             </div>
         </div>
     </div>
+
+        <!-- View Order Details Modal -->
+        <div class="modal fade" id="viewOrderModal">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Chi tiết đơn hàng</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="orderDetailsContent">
+                        <div class="text-center text-muted">Đang tải...</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            // View details button (always available)
+            echo ' <button class="btn btn-info btn-sm view-order" data-id="'.$row['o_id'].'">
+                    <i class="fas fa-eye"></i>
+                  </button>';
 
     <!-- Update Status Modal -->
     <div class="modal fade" id="updateStatusModal">
@@ -352,6 +380,24 @@ $(document).ready(function() {
             }
         });
     });
+
+        // Handle view order details
+        $(document).on('click', '.view-order', function() {
+            const orderId = $(this).data('id');
+            $('#orderDetailsContent').html('<div class="text-center text-muted">Đang tải...</div>');
+            $('#viewOrderModal').modal('show');
+            $.ajax({
+                url: 'view_order.php',
+                type: 'GET',
+                data: { order_id: orderId },
+                success: function(data) {
+                    $('#orderDetailsContent').html(data);
+                },
+                error: function(xhr) {
+                    $('#orderDetailsContent').html('<div class="alert alert-danger">Không thể tải chi tiết đơn hàng.</div>');
+                }
+            });
+        });
 });
     </script>
 </body>

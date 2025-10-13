@@ -9,6 +9,40 @@ if(empty($_SESSION["res_admin_id"])) {
 
 $res_id = $_SESSION["res_id"];
 
+// Xóa món ăn
+if(isset($_POST['delete_id'])) {
+    $delete_id = $_POST['delete_id'];
+    $sql = "DELETE FROM dishes WHERE d_id = ? AND rs_id = ?";
+    $stmt = mysqli_prepare($db, $sql);
+    mysqli_stmt_bind_param($stmt, "ii", $delete_id, $res_id);
+    mysqli_stmt_execute($stmt);
+    $success = '<div class="alert alert-success">Xóa món ăn thành công!</div>';
+}
+
+// Sửa món ăn
+if(isset($_POST['edit_id']) && isset($_POST['edit_submit'])) {
+    $edit_id = $_POST['edit_id'];
+    $d_name = $_POST['edit_d_name'];
+    $about = $_POST['edit_about'];
+    $price = $_POST['edit_price'];
+    if(!empty($_FILES["edit_file"]["name"])) {
+        $target_dir = "../admin/Res_img/dishes/";
+        $file = $_FILES["edit_file"]["name"];
+        $fnew = uniqid().'-'.basename($file);
+        $target_file = $target_dir . $fnew;
+        move_uploaded_file($_FILES["edit_file"]["tmp_name"], $target_file);
+        $sql = "UPDATE dishes SET title=?, slogan=?, price=?, img=? WHERE d_id=? AND rs_id=?";
+        $stmt = mysqli_prepare($db, $sql);
+        mysqli_stmt_bind_param($stmt, "sssiii", $d_name, $about, $price, $fnew, $edit_id, $res_id);
+    } else {
+        $sql = "UPDATE dishes SET title=?, slogan=?, price=? WHERE d_id=? AND rs_id=?";
+        $stmt = mysqli_prepare($db, $sql);
+        mysqli_stmt_bind_param($stmt, "sssii", $d_name, $about, $price, $edit_id, $res_id);
+    }
+    mysqli_stmt_execute($stmt);
+    $success = '<div class="alert alert-success">Cập nhật món ăn thành công!';
+}
+
 // Thêm món mới
 if(isset($_POST['submit'])) {
     if(empty($_POST['d_name']) || empty($_POST['about']) || $_POST['price']=='') {
@@ -130,10 +164,10 @@ if(isset($_POST['submit'])) {
                 
                 <div class="card">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Danh sách món ăn</h5>
-                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addDishModal">
-                            <i class="fas fa-plus me-2"></i>Thêm món
-                        </button>
+                            <h5 class="mb-0">Danh sách món ăn</h5>
+                            <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addDishModal">
+                                <i class="fas fa-plus me-2"></i>Thêm món
+                            </button>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -222,6 +256,42 @@ if(isset($_POST['submit'])) {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+        <!-- Edit Dish Modal -->
+        <div class="modal fade" id="editDishModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" enctype="multipart/form-data" id="editDishForm">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Sửa món ăn</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="edit_id" id="edit_id">
+                            <div class="mb-3">
+                                <label class="form-label">Tên món</label>
+                                <input type="text" name="edit_d_name" id="edit_d_name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea name="edit_about" id="edit_about" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Giá</label>
+                                <input type="number" name="edit_price" id="edit_price" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Hình ảnh (nếu muốn đổi)</label>
+                                <input type="file" name="edit_file" class="form-control">
+                            </div>
+                        </div>
+                        <div class="text-end mb-3 me-3">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                <button type="submit" name="edit_submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     <script>
         $(document).ready(function() {
             $('#menuTable').DataTable({
@@ -229,6 +299,31 @@ if(isset($_POST['submit'])) {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
                 }
             });
+                // Sửa món ăn
+                $('.edit-dish').click(function() {
+                    var id = $(this).data('id');
+                    $.ajax({
+                        url: 'get_menu_item.php',
+                        type: 'POST',
+                        data: {id: id},
+                        dataType: 'json',
+                        success: function(data) {
+                            $('#edit_id').val(data.d_id);
+                            $('#edit_d_name').val(data.title);
+                            $('#edit_about').val(data.slogan);
+                            $('#edit_price').val(data.price);
+                            $('#editDishModal').modal('show');
+                        }
+                    });
+                });
+
+                // Xóa món ăn
+                $('.delete-dish').click(function() {
+                    if(confirm('Bạn có chắc muốn xóa món này?')) {
+                        var id = $(this).data('id');
+                        $('<form method="post"><input type="hidden" name="delete_id" value="'+id+'"></form>').appendTo('body').submit();
+                    }
+                });
         });
     </script>
 </body>
