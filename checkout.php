@@ -31,6 +31,19 @@ if(empty($_SESSION["user_id"])) {
         function_alert();
     }
 }
+
+// Thêm code để lấy thông tin nhà hàng từ giỏ hàng
+$restaurant_id = null;
+if(!empty($_SESSION["cart_item"])) {
+    foreach($_SESSION["cart_item"] as $item) {
+        $dish_query = mysqli_query($db, "SELECT rs_id FROM dishes WHERE title = '".$item["title"]."' LIMIT 1");
+        if($dish_query && mysqli_num_rows($dish_query) > 0) {
+            $dish = mysqli_fetch_assoc($dish_query);
+            $restaurant_id = $dish['rs_id'];
+            break;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -147,6 +160,99 @@ if(empty($_SESSION["user_id"])) {
             margin-top: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.07);
         }
+
+        /* ...existing styles... */
+        
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-button:hover {
+            background: #5a6268;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-top: 2rem;
+        }
+        
+        .checkout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .breadcrumb-nav {
+            background: rgba(253, 77, 64, 0.1);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb {
+            margin: 0;
+            background: none;
+            padding: 0;
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "→";
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .breadcrumb-item a {
+            color: #6c757d;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .breadcrumb-item a:hover {
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column-reverse;
+                gap: 15px;
+            }
+            
+            .back-button,
+            .btn-gradient {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -213,17 +319,121 @@ if(empty($_SESSION["user_id"])) {
     <!-- Main Content -->
     <div class="main-content">
         <div class="checkout-card">
-            <h3 class="mb-4 text-center" style="color:#1976d2; font-weight:700; font-size:2rem;">
-                <i class="fas fa-credit-card me-2"></i>Thông tin thanh toán
-            </h3>
+            <!-- Breadcrumb Navigation -->
+            <nav class="breadcrumb-nav">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="index.php">
+                            <i class="fas fa-home me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="restaurants.php">Nhà hàng</a>
+                    </li>
+                    <?php if($restaurant_id) { ?>
+                    <li class="breadcrumb-item">
+                        <a href="dishes.php?res_id=<?php echo $restaurant_id; ?>">Chọn món</a>
+                    </li>
+                    <?php } ?>
+                    <li class="breadcrumb-item active">Thanh toán</li>
+                </ol>
+            </nav>
+            
+            <!-- Header với nút quay lại -->
+            <div class="checkout-header">
+                <h3 style="color:#1976d2; font-weight:700; font-size:2rem; margin:0;">
+                    <i class="fas fa-credit-card me-2"></i>Thông tin thanh toán
+                </h3>
+                
+                <?php if($restaurant_id) { ?>
+                <a href="dishes.php?res_id=<?php echo $restaurant_id; ?>" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại chọn món
+                </a>
+                <?php } else { ?>
+                <a href="restaurants.php" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại
+                </a>
+                <?php } ?>
+            </div>
+
+            <!-- Order Summary Card -->
+            <div class="card mb-4" style="border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 16px;">
+                <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 16px 16px 0 0; border: none;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2 text-primary"></i>
+                        Đơn hàng của bạn (<?php echo count($_SESSION["cart_item"]); ?> món)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php 
+                    if(!empty($_SESSION["cart_item"])) {
+                        foreach($_SESSION["cart_item"] as $item) {
+                            // Lấy thông tin món ăn từ database để có đường dẫn ảnh chính xác
+                            $dish_query = mysqli_query($db, "SELECT img FROM dishes WHERE title = '".mysqli_real_escape_string($db, $item["title"])."' LIMIT 1");
+                            $dish_img = '';
+                            if($dish_query && mysqli_num_rows($dish_query) > 0) {
+                                $dish_data = mysqli_fetch_assoc($dish_query);
+                                $dish_img = $dish_data['img'];
+                            } else {
+                                $dish_img = 'default-food.jpg'; // ảnh mặc định nếu không tìm thấy
+                            }
+                            
+                            echo '<div class="d-flex justify-content-between align-items-center mb-3 pb-3" style="border-bottom: 1px solid #f1f1f1;">
+                                <div class="d-flex align-items-center">
+                                    <div class="food-image-wrapper me-3" style="width: 60px; height: 60px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+                            
+                            // Kiểm tra xem file ảnh có tồn tại không
+                            $image_path = "admin/Res_img/dishes/" . $dish_img;
+                            if($dish_img && file_exists($image_path)) {
+                                echo '<img src="'.$image_path.'" alt="'.htmlspecialchars($item["title"]).'" 
+                                         style="width: 100%; height: 100%; object-fit: cover;">';
+                            } else {
+                                // Hiển thị icon mặc định nếu không có ảnh
+                                echo '<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #f8f9fa, #e9ecef); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-utensils text-muted" style="font-size: 20px;"></i>
+                                      </div>';
+                            }
+                            
+                            echo '    </div>
+                                    <div>
+                                        <div class="fw-semibold mb-1" style="font-size: 1.1rem;">'.htmlspecialchars($item["title"]).'</div>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-sort-numeric-up me-1"></i>
+                                                Số lượng: <span class="fw-medium">'.$item["quantity"].'</span>
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-money-bill me-1"></i>
+                                                Đơn giá: <span class="fw-medium">'.number_format($item["price"], 0, ',', '.').'₫</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-primary" style="font-size: 1.1rem;">
+                                        '.number_format($item["price"] * $item["quantity"], 0, ',', '.').'₫
+                                    </div>
+                                    <small class="text-muted">Thành tiền</small>
+                                </div>
+                            </div>';
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+
             <form action="" method="post">
                 <div class="mb-4">
                     <label for="delivery_address" class="form-label fw-bold">
                         <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
                     </label>
                     <input type="text" class="form-control" id="delivery_address" name="delivery_address"
-                           placeholder="Nhập địa chỉ nhận hàng của bạn" required>
+                           placeholder="Nhập địa chỉ nhận hàng của bạn" required
+                           style="border-radius: 12px; padding: 12px 16px; border: 2px solid #e9ecef;">
                 </div>
+                
                 <div class="mb-4 px-2">
                     <div style="background: linear-gradient(90deg,#fd4d40,#ff9b44); border-radius: 14px; padding: 24px 32px;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -252,30 +462,56 @@ if(empty($_SESSION["user_id"])) {
                         </div>
                     </div>
                 </div>
+                
                 <div class="payment-option mb-4">
-                    <div class="d-flex flex-column gap-2">
-                        <label class="form-check d-flex align-items-center gap-2">
-                            <input name="mod" id="radioStacked1" checked value="COD" type="radio" class="form-check-input"> 
-                            <span class="ms-1 fw-semibold">Thanh toán khi nhận hàng</span>
-                        </label>
-                        <label class="form-check d-flex align-items-center gap-2">
-                            <input name="mod" type="radio" value="qr" class="form-check-input" id="qrRadio"> 
-                            <span class="ms-1 fw-semibold">Thanh toán bằng QR Code</span>
-                        </label>
+                    <h6 class="mb-3">
+                        <i class="fas fa-credit-card me-2"></i>Phương thức thanh toán
+                    </h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="form-check p-3" style="border: 2px solid #e9ecef; border-radius: 12px; transition: all 0.3s ease;">
+                            <input class="form-check-input" type="radio" name="mod" id="radioStacked1" value="COD" checked>
+                            <label class="form-check-label fw-semibold ms-2" for="radioStacked1">
+                                <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                                Thanh toán khi nhận hàng (COD)
+                            </label>
+                        </div>
+                        <div class="form-check p-3" style="border: 2px solid #e9ecef; border-radius: 12px; transition: all 0.3s ease;">
+                            <input class="form-check-input" type="radio" name="mod" id="qrRadio" value="qr">
+                            <label class="form-check-label fw-semibold ms-2" for="qrRadio">
+                                <i class="fas fa-qrcode me-2 text-primary"></i>
+                                Thanh toán bằng QR Code
+                            </label>
+                        </div>
                     </div>
+                    
                     <div id="qrPaymentSection" style="display: none; text-align: center;">
                         <p class="mt-3 mb-2">Quét mã QR để thanh toán:</p>
                         <div id="qrImageContainer">
-                            <img id="qrCodeImage" src="" alt="QR Code for Payment" width="180" style="border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+                            <img id="qrCodeImage" src="" alt="QR Code for Payment" width="180" 
+                                 style="border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
                         </div>
                         <p class="mt-2">Số tiền thanh toán: <strong><?php echo number_format($item_total, 0, ',', '.'); ?> VND</strong></p>
                     </div>
                 </div>
-                <div class="text-center mt-4">
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <?php if($restaurant_id) { ?>
+                    <a href="dishes.php?res_id=<?php echo $restaurant_id; ?>" class="back-button">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại chọn món
+                    </a>
+                    <?php } else { ?>
+                    <a href="cart.php" class="back-button">
+                        <i class="fas fa-arrow-left"></i>
+                        Xem giỏ hàng
+                    </a>
+                    <?php } ?>
+                    
                     <input type="submit" onclick="return confirm('Xác nhận thanh toán?');" name="submit"
-                           class="btn btn-gradient btn-lg px-5 py-2"
-                           style="background: linear-gradient(90deg,#fd4d40,#ff9b44); color:#fff; border:none; border-radius:12px; font-size:1.2rem; font-weight:700; box-shadow:0 2px 8px rgba(253,77,64,0.12); transition:0.3s;"
-                           value="Thanh toán">
+                           class="btn btn-gradient btn-lg px-5 py-3"
+                           style="background: linear-gradient(90deg,#fd4d40,#ff9b44); color:#fff; border:none; border-radius:12px; font-size:1.2rem; font-weight:700; box-shadow:0 4px 16px rgba(253,77,64,0.3); transition:0.3s;"
+                           value="Xác nhận thanh toán">
                 </div>
             </form>
         </div>
@@ -291,6 +527,48 @@ if(empty($_SESSION["user_id"])) {
         const codRadio = document.getElementById('radioStacked1');
         const qrPaymentSection = document.getElementById('qrPaymentSection');
         const qrCodeImage = document.getElementById('qrCodeImage');
+
+        // Thêm hiệu ứng cho payment option selection
+        const paymentOptions = document.querySelectorAll('.form-check');
+        paymentOptions.forEach(option => {
+            const radio = option.querySelector('input[type="radio"]');
+            
+            option.addEventListener('click', function() {
+                // Reset all options
+                paymentOptions.forEach(opt => {
+                    opt.style.borderColor = '#e9ecef';
+                    opt.style.backgroundColor = '#fff';
+                });
+                
+                // Highlight selected option
+                if(radio.checked) {
+                    option.style.borderColor = 'var(--primary-color)';
+                    option.style.backgroundColor = 'rgba(253, 77, 64, 0.05)';
+                }
+            });
+            
+            radio.addEventListener('change', function() {
+                // Reset all options
+                paymentOptions.forEach(opt => {
+                    opt.style.borderColor = '#e9ecef';
+                    opt.style.backgroundColor = '#fff';
+                });
+                
+                // Highlight selected option
+                if(this.checked) {
+                    option.style.borderColor = 'var(--primary-color)';
+                    option.style.backgroundColor = 'rgba(253, 77, 64, 0.05)';
+                }
+            });
+        });
+
+        // Initialize selected option
+        const checkedRadio = document.querySelector('input[name="mod"]:checked');
+        if(checkedRadio) {
+            const selectedOption = checkedRadio.closest('.form-check');
+            selectedOption.style.borderColor = 'var(--primary-color)';
+            selectedOption.style.backgroundColor = 'rgba(253, 77, 64, 0.05)';
+        }
 
         function toggleQRSection() {
             if (qrRadio.checked) {

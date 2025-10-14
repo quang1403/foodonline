@@ -43,6 +43,16 @@ if(empty($_SESSION['user_id'])) {
         .navbar {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             padding: 1rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover img {
+            transform: scale(1.05);
         }
 
         .nav-link {
@@ -50,11 +60,28 @@ if(empty($_SESSION['user_id'])) {
             font-weight: 500;
             padding: 0.5rem 1rem;
             transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: all 0.3s;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 80%;
         }
 
         .nav-link:hover {
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
+            transform: translateY(-2px);
         }
 
         .order-card {
@@ -87,12 +114,38 @@ if(empty($_SESSION['user_id'])) {
             border-radius: 20px;
             font-size: 0.875rem;
         }
+
+        .dropdown-menu {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-item {
+            padding: 0.7rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
     </style>
 </head>
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="index.php">
                 <img src="images/logo.png" alt="Logo" height="40">
@@ -106,17 +159,30 @@ if(empty($_SESSION['user_id'])) {
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="index.php">
-                            <i class="fas fa-home me-2"></i>Trang chủ
+                            <i class="fas fa-home me-1"></i>Trang chủ
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="restaurants.php">
-                            <i class="fas fa-store me-2"></i>Nhà hàng
+                            <i class="fas fa-utensils me-1"></i>Nhà hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.php">
+                            <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
+                            <?php
+                            if(!empty($_SESSION["cart_item"])) {
+                                $cart_count = count(array_keys($_SESSION["cart_item"]));
+                            ?>
+                                <span class="badge rounded-pill bg-danger">
+                                    <?php echo $cart_count; ?>
+                                </span>
+                            <?php } ?>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="your_orders.php">
-                            <i class="fas fa-list me-2"></i>Đơn hàng
+                            <i class="fas fa-list me-1"></i>Đơn hàng
                         </a>
                     </li>
                 </ul>
@@ -128,6 +194,11 @@ if(empty($_SESSION['user_id'])) {
                             <i class="fas fa-user me-2"></i><?php echo $_SESSION["username"]; ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="your_orders.php">
+                                    <i class="fas fa-list me-2"></i>Đơn hàng của tôi
+                                </a>
+                            </li>
                             <li>
                                 <a class="dropdown-item" href="userprofile.php">
                                     <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
