@@ -171,6 +171,8 @@ session_start();
     border-top: 1px solid #f1f3f4;
     border-bottom: 1px solid #f1f3f4;
     margin-bottom: 1rem;
+    gap: 1.25rem; /* Khoảng cách giữa các stat items */
+    flex-wrap: wrap; /* Cho phép xuống hàng trên màn hình nhỏ */
 }
 
 .stat-item {
@@ -180,6 +182,10 @@ session_start();
     font-size: 13px;
     color: #6c757d;
     font-weight: 500;
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 .restaurant-actions {
