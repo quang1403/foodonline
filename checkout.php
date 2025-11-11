@@ -429,9 +429,56 @@ if(!empty($_SESSION["cart_item"])) {
                     <label for="delivery_address" class="form-label fw-bold">
                         <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
                     </label>
-                    <input type="text" class="form-control" id="delivery_address" name="delivery_address"
-                           placeholder="Nhập địa chỉ nhận hàng của bạn" required
-                           style="border-radius: 12px; padding: 12px 16px; border: 2px solid #e9ecef;">
+                    
+                    <?php
+                    // Get user's saved addresses
+                    $user_id = $_SESSION['user_id'];
+                    $addresses_query = mysqli_query($db, "SELECT * FROM user_addresses WHERE user_id='$user_id' ORDER BY is_default DESC, id DESC");
+                    $has_addresses = mysqli_num_rows($addresses_query) > 0;
+                    
+                    if($has_addresses) {
+                        // Get default address
+                        $default_address = '';
+                        mysqli_data_seek($addresses_query, 0);
+                        while($addr = mysqli_fetch_array($addresses_query)) {
+                            if($addr['is_default'] == 1) {
+                                $default_address = $addr['address'];
+                                break;
+                            }
+                        }
+                    ?>
+                        <select class="form-control mb-2" id="saved_addresses" style="border-radius: 12px; padding: 12px 16px; border: 2px solid #e9ecef;">
+                            <option value="">-- Chọn địa chỉ đã lưu --</option>
+                            <?php
+                            mysqli_data_seek($addresses_query, 0);
+                            while($addr = mysqli_fetch_array($addresses_query)) {
+                                $selected = $addr['is_default'] == 1 ? 'selected' : '';
+                                $default_label = $addr['is_default'] == 1 ? ' (Mặc định)' : '';
+                                echo '<option value="'.htmlspecialchars($addr['address']).'" '.$selected.'>'.htmlspecialchars($addr['address']).$default_label.'</option>';
+                            }
+                            ?>
+                            <option value="custom">Nhập địa chỉ mới...</option>
+                        </select>
+                        
+                        <input type="text" class="form-control" id="delivery_address" name="delivery_address"
+                               placeholder="Hoặc nhập địa chỉ mới" 
+                               value="<?php echo htmlspecialchars($default_address); ?>"
+                               style="border-radius: 12px; padding: 12px 16px; border: 2px solid #e9ecef;">
+                        
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Bạn có thể quản lý địa chỉ của mình 
+                            <a href="manage_addresses.php" target="_blank">tại đây</a>
+                        </small>
+                    <?php } else { ?>
+                        <input type="text" class="form-control" id="delivery_address" name="delivery_address"
+                               placeholder="Nhập địa chỉ nhận hàng của bạn" required
+                               style="border-radius: 12px; padding: 12px 16px; border: 2px solid #e9ecef;">
+                        
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Bạn có thể lưu địa chỉ để sử dụng lại sau 
+                            <a href="manage_addresses.php" target="_blank">tại đây</a>
+                        </small>
+                    <?php } ?>
                 </div>
                 
                 <div class="mb-4 px-2">
@@ -592,6 +639,21 @@ if(!empty($_SESSION["cart_item"])) {
         qrRadio.addEventListener('change', toggleQRSection);
         codRadio.addEventListener('change', toggleQRSection);
         toggleQRSection();
+        
+        // Address selection handler
+        const savedAddresses = document.getElementById('saved_addresses');
+        const deliveryAddress = document.getElementById('delivery_address');
+        
+        if(savedAddresses) {
+            savedAddresses.addEventListener('change', function() {
+                if(this.value === 'custom') {
+                    deliveryAddress.value = '';
+                    deliveryAddress.focus();
+                } else if(this.value !== '') {
+                    deliveryAddress.value = this.value;
+                }
+            });
+        }
     });
     </script>
 </body>
