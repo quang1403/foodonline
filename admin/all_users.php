@@ -133,12 +133,19 @@ if(empty($_SESSION["adm_id"])) {
                                     
                                     if(mysqli_num_rows($query) > 0) {
                                         while($row = mysqli_fetch_array($query)) {
+                                            // Lấy địa chỉ từ bảng user_addresses
+                                            $addr_query = mysqli_query($db, "SELECT address, is_default FROM user_addresses WHERE user_id='".$row['u_id']."' ORDER BY is_default DESC, id DESC");
+                                            $addresses = [];
+                                            while($addr = mysqli_fetch_array($addr_query)) {
+                                                $addresses[] = ($addr['is_default'] == 1 ? '<b>'.$addr['address'].' <span class=\'badge bg-success\'>Mặc định</span></b>' : $addr['address']);
+                                            }
+                                            $addr_html = count($addresses) ? implode('<br>', $addresses) : '<span class="text-muted">Chưa có</span>';
                                             echo '<tr>
                                                 <td>'.$row['username'].'</td>
                                                 <td>'.$row['f_name'].' '.$row['l_name'].'</td>
                                                 <td>'.$row['email'].'</td>
                                                 <td>'.$row['phone'].'</td>
-                                                <td>'.$row['address'].'</td>
+                                                <td>'.$addr_html.'</td>
                                                 <td>'.date('d/m/Y', strtotime($row['date'])).'</td>
                                                 <td>
                                                     <button class="btn btn-primary btn-sm edit-user" data-id="'.$row['u_id'].'">
@@ -212,10 +219,13 @@ if(empty($_SESSION["adm_id"])) {
                                     <small class="text-muted">Để trống nếu không muốn thay đổi mật khẩu</small>
                                 </div>
                             </div>
+                            
+                            <!-- User Addresses Section -->
                             <div class="col-12">
-                                <div class="form-group">
-                                    <label class="form-label">Địa chỉ</label>
-                                    <textarea name="address" class="form-control" rows="2"></textarea>
+                                <hr class="my-3">
+                                <h6 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng đã lưu</h6>
+                                <div id="userAddressesList" class="mb-3">
+                                    <!-- Addresses will be loaded here -->
                                 </div>
                             </div>
                         </div>
@@ -268,7 +278,9 @@ if(empty($_SESSION["adm_id"])) {
                         $('input[name="l_name"]').val(data.l_name);
                         $('input[name="email"]').val(data.email);
                         $('input[name="phone"]').val(data.phone);
-                        $('textarea[name="address"]').val(data.address);
+                        
+                        // Display user addresses
+                        displayUserAddresses(data.addresses, data.u_id);
                         
                         // Show modal
                         $('#editUserModal').modal('show');
@@ -297,6 +309,38 @@ if(empty($_SESSION["adm_id"])) {
                     }
                 });
             });
+            
+            // Function to display user addresses
+            function displayUserAddresses(addresses, userId) {
+                const container = $('#userAddressesList');
+                container.empty();
+                
+                if(!addresses || addresses.length === 0) {
+                    container.html('<div class="alert alert-info mb-0"><i class="fas fa-info-circle me-2"></i>Người dùng chưa có địa chỉ giao hàng nào.</div>');
+                    return;
+                }
+                
+                addresses.forEach(function(addr) {
+                    const defaultBadge = addr.is_default == 1 ? '<span class="badge bg-success ms-2"><i class="fas fa-star"></i> Mặc định</span>' : '';
+                    const addressCard = `
+                        <div class="card mb-2" style="border-left: 3px solid ${addr.is_default == 1 ? '#28a745' : '#6c757d'};">
+                            <div class="card-body py-2 px-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                        <span>${addr.address}</span>
+                                        ${defaultBadge}
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-clock me-1"></i>${new Date(addr.created_at).toLocaleDateString('vi-VN')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.append(addressCard);
+                });
+            }
         });
     </script>
 </body>

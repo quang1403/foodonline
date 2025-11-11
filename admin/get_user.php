@@ -39,6 +39,20 @@ try {
         exit();
     }
     
+    // Get user's addresses
+    $addr_sql = "SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC";
+    $addr_stmt = mysqli_prepare($db, $addr_sql);
+    mysqli_stmt_bind_param($addr_stmt, "i", $id);
+    mysqli_stmt_execute($addr_stmt);
+    $addr_result = mysqli_stmt_get_result($addr_stmt);
+    
+    $addresses = [];
+    while($addr = mysqli_fetch_assoc($addr_result)) {
+        $addresses[] = $addr;
+    }
+    
+    $user['addresses'] = $addresses;
+    
     echo json_encode(['success' => true, 'data' => $user]);
 
 } catch(Exception $e) {

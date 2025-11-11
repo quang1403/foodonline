@@ -16,7 +16,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $l_name = mysqli_real_escape_string($db, $_POST['l_name']);
     $email = mysqli_real_escape_string($db, $_POST['email']);
     $phone = mysqli_real_escape_string($db, $_POST['phone']);
-    $address = mysqli_real_escape_string($db, $_POST['address']);
 
     // Build update query
     $sql = "UPDATE users SET 
@@ -24,11 +23,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             f_name = ?, 
             l_name = ?, 
             email = ?, 
-            phone = ?, 
-            address = ?";
+            phone = ?";
     
-    $params = [$username, $f_name, $l_name, $email, $phone, $address];
-    $types = "ssssss";
+    $params = [$username, $f_name, $l_name, $email, $phone];
+    $types = "sssss";
 
     // Add password if provided
     if(!empty($_POST['password'])) {

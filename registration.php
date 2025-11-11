@@ -54,7 +54,7 @@ if(isset($_POST['submit'] ))
 	else{
        
 	 
-	$mql = "INSERT INTO users(username,f_name,l_name,email,phone,password,address) VALUES('".$_POST['username']."','".$_POST['firstname']."','".$_POST['lastname']."','".$_POST['email']."','".$_POST['phone']."','".md5($_POST['password'])."','".$_POST['address']."')";
+	$mql = "INSERT INTO users(username,f_name,l_name,email,phone,password) VALUES('".$_POST['username']."','".$_POST['firstname']."','".$_POST['lastname']."','".$_POST['email']."','".$_POST['phone']."','".md5($_POST['password'])."')";
 	mysqli_query($db, $mql);
 	
 		 header("refresh:0.1;url=login.php");
@@ -166,10 +166,6 @@ if(isset($_POST['submit'] ))
                                             <div class="form-group col-sm-6">
                                                 <label for="exampleInputPassword1">Nhập lại mật khẩu</label>
                                                 <input type="password" class="form-control" name="cpassword" id="exampleInputPassword2">
-                                            </div>
-                                            <div class="form-group col-sm-12">
-                                                <label for="exampleTextarea">Địa chỉ</label>
-                                                <textarea class="form-control" id="exampleTextarea" name="address" rows="3"></textarea>
                                             </div>
 
                                         </div>
