@@ -13,6 +13,8 @@ session_start();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chatbox CSS -->
+    <link rel="stylesheet" href="food-chatbox/assets/css/chatbox.css">
     <style>
         :root {
             --primary-color: #fd4d40;
@@ -234,6 +236,10 @@ session_start();
 </head>
 
 <body>
+      <!-- Hidden field for user ID -->
+    <?php if(!empty($_SESSION["user_id"])) { ?>
+        <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+    <?php } ?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -514,5 +520,7 @@ session_start();
         });
     });
     </script>
+    <!-- Chatbox JavaScript -->
+<script src="food-chatbox/assets/js/chatbox.js"></script>
 </body>
 </html>

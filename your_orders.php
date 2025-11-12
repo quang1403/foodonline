@@ -18,7 +18,9 @@ if(empty($_SESSION['user_id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <!-- Chatbox CSS -->
+    <link rel="stylesheet" href="food-chatbox/assets/css/chatbox.css">
+   <style>
         /* Add these styles to your existing CSS */
         body {
             min-height: 100vh;
@@ -144,6 +146,10 @@ if(empty($_SESSION['user_id'])) {
 </head>
 
 <body>
+ <!-- Hidden field for user ID -->
+    <?php if(!empty($_SESSION["user_id"])) { ?>
+        <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+    <?php } ?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -302,5 +308,7 @@ if(empty($_SESSION['user_id'])) {
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Chatbox JS -->
+    <script src="food-chatbox/assets/js/chatbox.js"></script>
 </body>
 </html>

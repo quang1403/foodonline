@@ -3,6 +3,37 @@ include("connection/connect.php");
 error_reporting(0);
 session_start();
 
+// Xử lý thêm vào giỏ hàng trước khi có AJAX request
+if(isset($_POST['addtocart']) && !isset($_POST['ajax'])) {
+    $product_id = $_POST['addtocart'];
+    
+    // Lấy thông tin món ăn
+    $stmt = $db->prepare("SELECT * FROM dishes WHERE d_id = ?");
+    $stmt->bind_param("i", $product_id);
+    $stmt->execute();
+    $product = $stmt->get_result()->fetch_assoc();
+    
+    if($product) {
+        // Thêm vào session cart
+        if(isset($_SESSION["cart_item"][$product_id])) {
+            $_SESSION["cart_item"][$product_id]["quantity"] += 1;
+        } else {
+            $_SESSION["cart_item"][$product_id] = array(
+                'd_id' => $product['d_id'],
+                'title' => $product['title'],
+                'price' => $product['price'],
+                'quantity' => 1,
+                'img' => $product['img']
+            );
+        }
+    }
+    
+    // Redirect về dishes.php với thông báo
+    $res_id = isset($_GET['res_id']) ? $_GET['res_id'] : (isset($_POST['res_id']) ? $_POST['res_id'] : 1);
+    header("Location: dishes.php?res_id=" . $res_id . "&added=1");
+    exit();
+}
+
 // Include cart functionality 
 include_once 'product-action.php';
 
@@ -186,6 +217,8 @@ if(!$restaurant) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chatbox CSS -->
+    <link rel="stylesheet" href="food-chatbox/assets/css/chatbox.css">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #ff7b54 0%, #ff6b35 100%);
@@ -813,10 +846,40 @@ if(!$restaurant) {
             box-shadow: 0 8px 25px rgba(255,152,0,0.4);
             color: white;
         }
+
+        .alert-success {
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            border: none;
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(102,187,106,0.3);
+            animation: slideDown 0.5s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-success .btn-close {
+            filter: brightness(0) invert(1);
+        }
     </style>
 </head>
 
 <body>
+    
+    <!-- Hidden field for user ID -->
+    <?php if(!empty($_SESSION["user_id"])) { ?>
+        <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+    <?php } ?>
+
     <div class="floating-elements"></div>
 
     <!-- Navbar -->
@@ -933,6 +996,14 @@ if(!$restaurant) {
 
     <!-- Menu Content -->
     <div class="container mb-5">
+        <?php if(isset($_GET['added']) && $_GET['added'] == '1'): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Thành công!</strong> Món ăn đã được thêm vào giỏ hàng.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php endif; ?>
+        
         <div class="row">
             <!-- Menu Items -->
             <div class="col-lg-8">
@@ -1326,5 +1397,7 @@ if(!$restaurant) {
             });
         });
     </script>
+    <!-- Chatbox JS -->
+    <script src="food-chatbox/assets/js/chatbox.js"></script>
 </body>
 </html>

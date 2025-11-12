@@ -13,6 +13,8 @@ session_start();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <!-- Chatbox CSS -->
+    <link rel="stylesheet" href="food-chatbox/assets/css/chatbox.css">
     <style>
         body {
             min-height: 100vh;
@@ -56,6 +58,10 @@ session_start();
     </style>
 </head>
 <body>
+     <!-- Hidden field for user ID -->
+    <?php if(!empty($_SESSION["user_id"])) { ?>
+        <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+    <?php } ?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -74,7 +80,19 @@ session_start();
                         <a class="nav-link" href="restaurants.php"><i class="fas fa-store me-2"></i>Nhà hàng</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="cart.php"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng</a>
+                        <a class="nav-link active" href="cart.php">
+                            <i class="fas fa-shopping-cart me-2"></i>Giỏ hàng
+                            <?php 
+                            $cart_count = 0;
+                            if(isset($_SESSION["cart_item"])) {
+                                foreach($_SESSION["cart_item"] as $item) {
+                                    $cart_count += $item["quantity"];
+                                }
+                            }
+                            if($cart_count > 0): ?>
+                                <span class="badge bg-warning text-dark ms-1"><?php echo $cart_count; ?></span>
+                            <?php endif; ?>
+                        </a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
@@ -173,12 +191,22 @@ session_start();
                 </table>
             </div>
             <div class="text-end">
+                <a href="restaurants.php" class="btn btn-secondary btn-lg me-2">
+                    <i class="fas fa-arrow-left me-2"></i>Tiếp tục mua hàng
+                </a>
                 <a href="checkout.php" class="btn btn-success btn-lg">
                     <i class="fas fa-credit-card me-2"></i>Thanh toán
                 </a>
             </div>
             <?php else: ?>
-                <div class="alert alert-info text-center">Giỏ hàng của bạn đang trống.</div>
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                    <h5>Giỏ hàng của bạn đang trống.</h5>
+                    <p>Hãy thêm những món ăn yêu thích!</p>
+                    <a href="restaurants.php" class="btn btn-primary btn-lg mt-3">
+                        <i class="fas fa-utensils me-2"></i>Khám phá món ăn
+                    </a>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -187,5 +215,7 @@ session_start();
     <?php include "include/footer.php"; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chatbox JS -->
+    <script src="food-chatbox/assets/js/chatbox.js"></script>
 </body>
 </html>

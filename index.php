@@ -564,9 +564,15 @@ session_start();
     color: white;
 }
     </style>
+    <!-- Chatbox CSS -->
+    <link rel="stylesheet" href="food-chatbox/assets/css/chatbox.css">
 </head>
 
 <body>
+    <!-- Hidden field for user ID -->
+    <?php if(!empty($_SESSION["user_id"])) { ?>
+        <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+    <?php } ?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -1061,5 +1067,8 @@ $(document).ready(function() {
     }
 });
 </script>
+
+<!-- Chatbox JavaScript -->
+<script src="food-chatbox/assets/js/chatbox.js"></script>
 </body>
 </html>
