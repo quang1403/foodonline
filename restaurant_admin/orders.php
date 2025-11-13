@@ -113,10 +113,10 @@ $_SESSION["res_id"] = $res_id;
                             <table id="orderTable" class="table table-hover">
                                 <thead>
                                     <tr>
+                                        <th>Mã đơn</th>
                                         <th>Khách hàng</th>
-                                        <th>Món ăn</th>
-                                        <th>Số lượng</th>
-                                        <th>Giá</th>
+                                        <th>Số món</th>
+                                        <th>Tổng tiền</th>
                                         <th>Địa chỉ</th>
                                         <th>Trạng thái</th>
                                         <th>Thời gian</th>
@@ -125,21 +125,32 @@ $_SESSION["res_id"] = $res_id;
                                 </thead>
                                 <tbody>
 <?php
-$query_res = mysqli_query($db,"SELECT uo.*, u.username 
+$query_res = mysqli_query($db,"SELECT 
+    uo.order_code,
+    u.username,
+    COUNT(*) as total_items,
+    SUM(uo.quantity * uo.price) as total_amount,
+    uo.address,
+    uo.status,
+    uo.pending_status,
+    MAX(uo.date) as date,
+    MIN(uo.o_id) as first_order_id
     FROM users_orders uo
     JOIN users u ON uo.u_id = u.u_id
     WHERE uo.rs_id='$res_id'
-    ORDER BY uo.date DESC");
+    GROUP BY uo.order_code
+    ORDER BY MAX(uo.date) DESC");
 
 if(!mysqli_num_rows($query_res)) {
     echo '<tr><td colspan="8" class="text-center">Không có đơn hàng nào.</td></tr>';
 } else {
     while($row = mysqli_fetch_assoc($query_res)) {
+        $order_code = $row['order_code'] ? htmlspecialchars($row['order_code']) : 'legacy_'.date('Y-m-d H:i', strtotime($row['date']));
         echo '<tr>
+            <td><strong>'.$order_code.'</strong></td>
             <td>'.htmlspecialchars($row['username']).'</td>
-            <td>'.htmlspecialchars($row['title']).'</td>
-            <td>'.$row['quantity'].'</td>
-            <td>'.number_format($row['price'], 0, ',', '.').' VNĐ</td>
+            <td>'.$row['total_items'].'</td>
+            <td><strong>'.number_format($row['total_amount'], 0, ',', '.').' VNĐ</strong></td>
             <td>'.htmlspecialchars($row['address']).'</td>';
 
         // Hiển thị trạng thái hiện tại và trạng thái chờ phê duyệt
@@ -229,20 +240,26 @@ if(!mysqli_num_rows($query_res)) {
         
         echo '</td>';
 
-        echo '<td>'.date('d/m/Y H:i', strtotime($row['date'])).'</td>
-            <td>';
+        echo '<td>'.date('d/m/Y H:i', strtotime($row['date'])).'</td>';
+        echo '<td>';
         
         // Chỉ cho phép cập nhật nếu chưa hoàn thành/hủy
         if($status != 'closed' && $status != 'rejected') {
-            echo '<button class="btn btn-primary btn-sm update-status" data-id="'.$row['o_id'].'">
+            echo '<button class="btn btn-primary btn-sm update-status" data-id="'.$row['first_order_id'].'" title="Cập nhật trạng thái">
                     <i class="fas fa-edit"></i>
                   </button>';
         }
 
-                    // Nút xem chi tiết luôn hiển thị, đặt cạnh nút cập nhật trạng thái
-                    echo ' <button class="btn btn-info btn-sm view-order" data-id="'.$row['o_id'].'" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </button>';
+        // Nút xem chi tiết - sử dụng order_code nếu có, ngược lại dùng first_order_id
+        if($row['order_code']) {
+            echo ' <button class="btn btn-info btn-sm view-order-res" data-code="'.$row['order_code'].'" title="Xem chi tiết">
+                    <i class="fas fa-eye"></i>
+                  </button>';
+        } else {
+            echo ' <button class="btn btn-info btn-sm view-order-res" data-id="'.$row['first_order_id'].'" title="Xem chi tiết">
+                    <i class="fas fa-eye"></i>
+                  </button>';
+        }
         
         echo '</td>
         </tr>';
@@ -275,11 +292,6 @@ if(!mysqli_num_rows($query_res)) {
                 </div>
             </div>
         </div>
-
-            // View details button (always available)
-            echo ' <button class="btn btn-info btn-sm view-order" data-id="'.$row['o_id'].'">
-                    <i class="fas fa-eye"></i>
-                  </button>';
 
     <!-- Update Status Modal -->
     <div class="modal fade" id="updateStatusModal">
@@ -382,21 +394,45 @@ $(document).ready(function() {
     });
 
         // Handle view order details
-        $(document).on('click', '.view-order', function() {
+        $(document).on('click', '.view-order-res', function() {
+            const orderCode = $(this).data('code');
             const orderId = $(this).data('id');
+            
             $('#orderDetailsContent').html('<div class="text-center text-muted">Đang tải...</div>');
             $('#viewOrderModal').modal('show');
-            $.ajax({
-                url: 'view_order.php',
-                type: 'GET',
-                data: { order_id: orderId },
-                success: function(data) {
-                    $('#orderDetailsContent').html(data);
-                },
-                error: function(xhr) {
-                    $('#orderDetailsContent').html('<div class="alert alert-danger">Không thể tải chi tiết đơn hàng.</div>');
-                }
-            });
+            
+            // Nếu có order_code thì dùng order_code, không thì dùng order_id
+            if(orderCode) {
+                $.ajax({
+                    url: '../order_detail.php',
+                    type: 'GET',
+                    data: { code: orderCode, ajax: 1 },
+                    success: function(data) {
+                        var mainHtml = data;
+                        if(mainHtml.indexOf('<body') !== -1) {
+                            mainHtml = mainHtml.split('<body')[1];
+                            mainHtml = mainHtml.substring(mainHtml.indexOf('>')+1);
+                            mainHtml = mainHtml.split('</body>')[0];
+                        }
+                        $('#orderDetailsContent').html(mainHtml);
+                    },
+                    error: function(xhr) {
+                        $('#orderDetailsContent').html('<div class="alert alert-danger">Không thể tải chi tiết đơn hàng.</div>');
+                    }
+                });
+            } else if(orderId) {
+                $.ajax({
+                    url: 'view_order.php',
+                    type: 'GET',
+                    data: { order_id: orderId },
+                    success: function(data) {
+                        $('#orderDetailsContent').html(data);
+                    },
+                    error: function(xhr) {
+                        $('#orderDetailsContent').html('<div class="alert alert-danger">Không thể tải chi tiết đơn hàng.</div>');
+                    }
+                });
+            }
         });
 });
     </script>

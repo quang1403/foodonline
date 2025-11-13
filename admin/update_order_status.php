@@ -27,18 +27,22 @@ if($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Get input data
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Validate required fields
-if(!isset($input['order_id']) || !isset($input['status']) || !isset($input['remark'])) {
+// Validate required fields - hỗ trợ cả order_id và order_code
+if((!isset($input['order_id']) && !isset($input['order_code'])) || !isset($input['status']) || !isset($input['remark'])) {
     sendResponse(false, 'Missing required fields');
 }
 
-$order_id = intval($input['order_id']);
+$order_id = isset($input['order_id']) ? intval($input['order_id']) : null;
+$order_code = isset($input['order_code']) ? trim($input['order_code']) : null;
 $status = trim($input['status']);
 $remark = trim($input['remark']);
 
-// Validate order ID
-if($order_id <= 0) {
+// Validate order identifier
+if($order_id && $order_id <= 0) {
     sendResponse(false, 'Invalid order ID');
+}
+if($order_code && empty($order_code)) {
+    sendResponse(false, 'Invalid order code');
 }
 
 // Validate status
@@ -57,9 +61,18 @@ try {
     mysqli_autocommit($db, false);
     
     // Check if order exists
-    $check_sql = "SELECT o_id FROM users_orders WHERE o_id = ?";
-    $check_stmt = mysqli_prepare($db, $check_sql);
-    mysqli_stmt_bind_param($check_stmt, "i", $order_id);
+    if($order_code) {
+        // Cập nhật tất cả items trong đơn hàng theo order_code
+        $check_sql = "SELECT o_id FROM users_orders WHERE order_code = ? LIMIT 1";
+        $check_stmt = mysqli_prepare($db, $check_sql);
+        mysqli_stmt_bind_param($check_stmt, "s", $order_code);
+    } else {
+        // Cập nhật theo order_id (legacy)
+        $check_sql = "SELECT o_id FROM users_orders WHERE o_id = ?";
+        $check_stmt = mysqli_prepare($db, $check_sql);
+        mysqli_stmt_bind_param($check_stmt, "i", $order_id);
+    }
+    
     mysqli_stmt_execute($check_stmt);
     $check_result = mysqli_stmt_get_result($check_stmt);
     
@@ -68,10 +81,14 @@ try {
         sendResponse(false, 'Order not found');
     }
     
+    // Lấy order_id đầu tiên để insert remark
+    $first_row = mysqli_fetch_assoc($check_result);
+    $first_order_id = $first_row['o_id'];
+    
     // Insert remark
     $remark_sql = "INSERT INTO remark(frm_id, status, remark) VALUES(?, ?, ?)";
     $remark_stmt = mysqli_prepare($db, $remark_sql);
-    mysqli_stmt_bind_param($remark_stmt, "iss", $order_id, $status, $remark);
+    mysqli_stmt_bind_param($remark_stmt, "iss", $first_order_id, $status, $remark);
     
     if(!mysqli_stmt_execute($remark_stmt)) {
         mysqli_rollback($db);
@@ -79,9 +96,17 @@ try {
     }
     
     // Update order status
-    $update_sql = "UPDATE users_orders SET status = ? WHERE o_id = ?";
-    $update_stmt = mysqli_prepare($db, $update_sql);
-    mysqli_stmt_bind_param($update_stmt, "si", $status, $order_id);
+    if($order_code) {
+        // Cập nhật tất cả items trong đơn hàng
+        $update_sql = "UPDATE users_orders SET status = ? WHERE order_code = ?";
+        $update_stmt = mysqli_prepare($db, $update_sql);
+        mysqli_stmt_bind_param($update_stmt, "ss", $status, $order_code);
+    } else {
+        // Cập nhật theo order_id
+        $update_sql = "UPDATE users_orders SET status = ? WHERE o_id = ?";
+        $update_stmt = mysqli_prepare($db, $update_sql);
+        mysqli_stmt_bind_param($update_stmt, "si", $status, $order_id);
+    }
     
     if(!mysqli_stmt_execute($update_stmt)) {
         mysqli_rollback($db);

@@ -5,30 +5,54 @@ include_once 'product-action.php';
 error_reporting(0);
 session_start();
 
-function function_alert() { 
-    echo "<script>alert('Thank you. Your Order has been placed!');</script>"; 
-    echo "<script>window.location.replace('your_orders.php');</script>"; 
+// Hàm sinh mã đơn hàng duy nhất
+function generateOrderCode($db) {
+    do {
+        // Tạo mã đơn: ORD + ngày tháng + số ngẫu nhiên
+        $date_part = date('ymd'); // Ví dụ: 251113
+        $random_part = strtoupper(substr(md5(uniqid(rand(), true)), 0, 6)); // 6 ký tự ngẫu nhiên
+        $order_code = 'ORD' . $date_part . $random_part;
+        
+        // Kiểm tra mã đã tồn tại chưa
+        $check = mysqli_query($db, "SELECT order_code FROM users_orders WHERE order_code = '$order_code'");
+    } while(mysqli_num_rows($check) > 0);
+    
+    return $order_code;
+}
+
+function function_alert($order_code) { 
+    echo "<script>alert('Cảm ơn bạn! Đơn hàng đã được đặt thành công!\\n\\nMã đơn hàng: ".$order_code."');</script>"; 
+    echo "<script>window.location.replace('order_detail.php?code=".$order_code."');</script>"; 
 } 
 
 $item_total = 0;
+$order_code = '';
+
 if(empty($_SESSION["user_id"])) {
     header('location:login.php');
     exit();
 } else {
-    foreach ($_SESSION["cart_item"] as $item) {
-        $item_total += ($item["price"] * $item["quantity"]);
-        if(isset($_POST['submit'])) {
+    if(isset($_POST['submit'])) {
+        // Sinh mã đơn hàng duy nhất cho tất cả các món trong giỏ
+        $order_code = generateOrderCode($db);
+        $delivery_address = mysqli_real_escape_string($db, $_POST['delivery_address']);
+        
+        foreach ($_SESSION["cart_item"] as $item) {
+            $item_total += ($item["price"] * $item["quantity"]);
             $dish = mysqli_fetch_assoc(mysqli_query($db, "SELECT rs_id FROM dishes WHERE title = '".$item["title"]."' LIMIT 1"));
             $rs_id = $dish['rs_id'];
-            $delivery_address = mysqli_real_escape_string($db, $_POST['delivery_address']);
-            $SQL = "INSERT INTO users_orders(u_id, title, quantity, price, rs_id, address, date) 
-                    VALUES ('".$_SESSION["user_id"]."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."', '".$rs_id."', '".$delivery_address."', NOW())";
+            
+            $SQL = "INSERT INTO users_orders(u_id, order_code, title, quantity, price, rs_id, address, date) 
+                    VALUES ('".$_SESSION["user_id"]."', '".$order_code."', '".$item["title"]."', '".$item["quantity"]."', '".$item["price"]."', '".$rs_id."', '".$delivery_address."', NOW())";
             mysqli_query($db, $SQL);
         }
-    }
-    if(isset($_POST['submit'])) {
+        
         unset($_SESSION["cart_item"]);
-        function_alert();
+        function_alert($order_code);
+    }
+    
+    foreach ($_SESSION["cart_item"] as $item) {
+        $item_total += ($item["price"] * $item["quantity"]);
     }
 }
 

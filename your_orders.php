@@ -50,18 +50,12 @@ if(empty($_SESSION['user_id'])) {
 
         .navbar-brand img {
             height: 40px;
-            transition: transform 0.3s ease;
-        }
-
-        .navbar-brand:hover img {
-            transform: scale(1.05);
         }
 
         .nav-link {
             color: white !important;
             font-weight: 500;
             padding: 0.5rem 1rem;
-            transition: all 0.3s;
             position: relative;
         }
 
@@ -73,31 +67,19 @@ if(empty($_SESSION['user_id'])) {
             width: 0;
             height: 2px;
             background: white;
-            transition: all 0.3s;
             transform: translateX(-50%);
         }
 
-        .nav-link:hover::after,
         .nav-link.active::after {
             width: 80%;
-        }
-
-        .nav-link:hover {
-            transform: translateY(-2px);
         }
 
         .order-card {
             border: none;
             border-radius: 15px;
             overflow: hidden;
-            transition: all 0.3s;
             margin-bottom: 1.5rem;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .table {
@@ -125,12 +107,6 @@ if(empty($_SESSION['user_id'])) {
 
         .dropdown-item {
             padding: 0.7rem 1.5rem;
-            transition: all 0.3s;
-        }
-
-        .dropdown-item:hover {
-            background: #f8f9fa;
-            transform: translateX(5px);
         }
 
         .badge {
@@ -138,9 +114,30 @@ if(empty($_SESSION['user_id'])) {
             font-size: 0.75em;
         }
 
-        .btn-outline-light:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: white;
+        .order-summary-card {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .order-items-collapse {
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .item-detail {
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem;
+        }
+
+        .item-detail:last-child {
+            border-bottom: none;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 1rem;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -210,6 +207,11 @@ if(empty($_SESSION['user_id'])) {
                                     <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="manage_addresses.php">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger" href="logout.php">
@@ -226,79 +228,160 @@ if(empty($_SESSION['user_id'])) {
     <!-- Main Content -->
     <div class="main-content">
         <div class="container py-5">
-            <div class="card order-card">
-                <div class="card-body">
-                    <h4 class="card-title mb-4">Lịch sử đơn hàng</h4>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Món ăn</th>
-                                    <th>Số lượng</th>
-                                    <th>Giá</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thời gian</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $query_res = mysqli_query($db,"SELECT * FROM users_orders WHERE u_id='".$_SESSION['user_id']."' ORDER BY date DESC");
-                                if(!mysqli_num_rows($query_res) > 0) {
-                                    echo '<tr><td colspan="6" class="text-center">Không có đơn hàng nào.</td></tr>';
-                                } else {
-                                    while($row = mysqli_fetch_array($query_res)) {
-                                ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
-                                    <td><?php echo $row['quantity']; ?></td>
-                                    <td><?php echo number_format($row['price'], 0, ',', '.'); ?> VNĐ</td>
-                                    <td>
-                                        <?php 
-                                        $status = $row['status'];
-                                        switch($status) {
-                                            case "NULL":
-                                            case "":
-                                                echo '<span class="badge bg-secondary"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
-                                                break;
-                                            case "preparing":
-                                                echo '<span class="badge bg-info"><i class="fas fa-hourglass-half me-1"></i>Đang chuẩn bị</span>';
-                                                break;
-                                            case "prepared":
-                                                echo '<span class="badge bg-primary"><i class="fas fa-check me-1"></i>Đã chuẩn bị</span>';
-                                                break;
-                                            case "in process":
-                                                echo '<span class="badge bg-warning"><i class="fas fa-motorcycle me-1"></i>Đang giao</span>';
-                                                break;
-                                            case "closed":
-                                                echo '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Đã giao</span>';
-                                                break;
-                                            case "rejected":
-                                                echo '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>';
-                                                break;
-                                        }
-                                        ?>
-                                    </td>
-                                    <td><?php echo date('d/m/Y H:i', strtotime($row['date'])); ?></td>
-                                    <td>
-                                        <?php if($status != "closed" && $status != "rejected") { ?>
-                                        <a href="delete_orders.php?order_del=<?php echo $row['o_id']; ?>" 
-                                           onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?');" 
-                                           class="btn btn-danger btn-sm">
-                                            <i class="fas fa-times me-1"></i>Hủy
-                                        </a>
-                                        <?php } ?>
-                                    </td>
-                                </tr>
-                                <?php 
-                                    }
-                                } 
-                                ?>
-                            </tbody>
-                        </table>
+            <h2 class="mb-4">Lịch sử đơn hàng</h2>
+            
+            <?php 
+            $query_res = mysqli_query($db,"SELECT * FROM users_orders WHERE u_id='".$_SESSION['user_id']."' ORDER BY date DESC");
+            
+            if(!mysqli_num_rows($query_res) > 0) {
+                echo '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Không có đơn hàng nào.</div>';
+            } else {
+                // Group orders by order_code
+                $orders_grouped = array();
+                while($row = mysqli_fetch_array($query_res)) {
+                    $order_code = $row['order_code'];
+                    if(empty($order_code)) {
+                        // Nếu đơn hàng cũ không có mã, tạo key theo thời gian
+                        $order_code = 'legacy_' . date('Y-m-d H:i', strtotime($row['date']));
+                    }
+                    
+                    if(!isset($orders_grouped[$order_code])) {
+                        $orders_grouped[$order_code] = array();
+                    }
+                    $orders_grouped[$order_code][] = $row;
+                }
+                
+                // Group by date
+                $orders_by_date = array();
+                foreach($orders_grouped as $order_code => $orders) {
+                    $order_date = date('Y-m-d', strtotime($orders[0]['date']));
+                    if(!isset($orders_by_date[$order_date])) {
+                        $orders_by_date[$order_date] = array();
+                    }
+                    $orders_by_date[$order_date][$order_code] = $orders;
+                }
+                
+                // Display orders grouped by date
+                foreach($orders_by_date as $date => $order_groups) {
+                    $date_display = date('d/m/Y', strtotime($date));
+                    $day_of_week = array('Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy');
+                    $day_name = $day_of_week[date('w', strtotime($date))];
+                    
+                    // Calculate total for this date
+                    $date_total = 0;
+                    foreach($order_groups as $orders) {
+                        foreach($orders as $order) {
+                            $date_total += $order['price'] * $order['quantity'];
+                        }
+                    }
+            ?>
+            
+            <div class="card order-card mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-day me-2 text-primary"></i>
+                            <?php echo $day_name . ', ' . $date_display; ?>
+                        </h5>
+                        <span class="badge bg-primary">
+                            <?php echo count($order_groups); ?> đơn hàng - Tổng: <?php echo number_format($date_total, 0, ',', '.'); ?> VNĐ
+                        </span>
                     </div>
                 </div>
+                <div class="card-body">
+                    <?php 
+                    $order_index = 0;
+                    foreach($order_groups as $order_code => $orders) { 
+                        $order_index++;
+                        $order_time = date('H:i', strtotime($orders[0]['date']));
+                        $item_count = count($orders);
+                        $order_total = 0;
+                        $first_status = $orders[0]['status'];
+                        $is_legacy = strpos($order_code, 'legacy_') === 0;
+                        
+                        foreach($orders as $order) {
+                            $order_total += $order['price'] * $order['quantity'];
+                        }
+                        
+                        $collapse_id = 'order-' . md5($order_code);
+                    ?>
+                    
+                    <div class="card order-summary-card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <div class="text-center">
+                                        <i class="fas fa-receipt fa-2x text-primary mb-2"></i>
+                                        <div class="small text-muted">
+                                            <?php if(!$is_legacy) { ?>
+                                                <strong><?php echo $order_code; ?></strong>
+                                            <?php } else { ?>
+                                                Đơn #<?php echo $order_index; ?>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div>
+                                        <i class="fas fa-clock text-muted me-2"></i>
+                                        <strong><?php echo $order_time; ?></strong>
+                                    </div>
+                                    <div class="mt-2">
+                                        <i class="fas fa-shopping-bag text-muted me-2"></i>
+                                        <span class="text-muted"><?php echo $item_count; ?> món</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <?php 
+                                    $status = $first_status;
+                                    switch($status) {
+                                        case "NULL":
+                                        case "":
+                                            echo '<span class="badge bg-secondary"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
+                                            break;
+                                        case "preparing":
+                                            echo '<span class="badge bg-info"><i class="fas fa-hourglass-half me-1"></i>Đang chuẩn bị</span>';
+                                            break;
+                                        case "prepared":
+                                            echo '<span class="badge bg-primary"><i class="fas fa-check me-1"></i>Đã chuẩn bị</span>';
+                                            break;
+                                        case "in process":
+                                            echo '<span class="badge bg-warning"><i class="fas fa-motorcycle me-1"></i>Đang giao</span>';
+                                            break;
+                                        case "closed":
+                                            echo '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Đã giao</span>';
+                                            break;
+                                        case "rejected":
+                                            echo '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>';
+                                            break;
+                                    }
+                                    ?>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-primary fw-bold">
+                                        <?php echo number_format($order_total, 0, ',', '.'); ?> VNĐ
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <?php if(!$is_legacy) { ?>
+                                    <a href="order_detail.php?code=<?php echo $order_code; ?>" 
+                                       class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>Xem chi tiết
+                                    </a>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <?php } ?>
+                </div>
             </div>
+            
+            <?php 
+                }
+            } 
+            ?>
         </div>
     </div>
 

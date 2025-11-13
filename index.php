@@ -651,6 +651,11 @@ session_start();
                                     <i class="fas fa-user-circle me-2"></i>Thông tin cá nhân
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="manage_addresses.php">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger" href="logout.php">

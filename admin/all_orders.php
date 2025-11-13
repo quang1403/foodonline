@@ -155,10 +155,10 @@ if(empty($_SESSION["adm_id"])) {
                             <table id="orderTable" class="table table-hover">
                                 <thead>
                                     <tr>
+                                        <th>Mã đơn hàng</th>
                                         <th>Khách hàng</th>
-                                        <th>Món ăn</th>
-                                        <th>Số lượng</th>
-                                        <th>Giá</th>
+                                        <th>Số món</th>
+                                        <th>Tổng tiền</th>
                                         <th>Địa chỉ</th>
                                         <th>Trạng thái</th>
                                         <th>Thời gian</th>
@@ -167,30 +167,46 @@ if(empty($_SESSION["adm_id"])) {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $sql = "SELECT users.*, users_orders.*, restaurant.title as restaurant_name FROM users 
-                                            INNER JOIN users_orders ON users.u_id=users_orders.u_id 
-                                            LEFT JOIN restaurant ON users_orders.rs_id=restaurant.rs_id
-                                            ORDER BY users_orders.date DESC";
+                                    // Lấy danh sách đơn hàng theo mã đơn
+                                    $sql = "SELECT 
+                                                uo.order_code,
+                                                uo.u_id,
+                                                u.username,
+                                                u.f_name,
+                                                u.l_name,
+                                                COUNT(uo.o_id) as total_items,
+                                                SUM(uo.price * uo.quantity) as total_amount,
+                                                MAX(uo.address) as address,
+                                                MAX(uo.status) as status,
+                                                MAX(uo.pending_status) as pending_status,
+                                                MAX(uo.date) as date,
+                                                MAX(r.title) as restaurant_name
+                                            FROM users_orders uo
+                                            INNER JOIN users u ON u.u_id = uo.u_id
+                                            LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                                            WHERE uo.order_code IS NOT NULL AND uo.order_code != ''
+                                            GROUP BY uo.order_code, uo.u_id, u.username, u.f_name, u.l_name
+                                            ORDER BY MAX(uo.date) DESC";
+                                    
                                     $query = mysqli_query($db, $sql);
                                     
                                     if(!mysqli_num_rows($query) > 0) {
-                                        echo '<tr><td colspan="9" class="text-center">Không có đơn hàng!</td></tr>';
+                                        echo '<tr><td colspan="8" class="text-center">Không có đơn hàng!</td></tr>';
                                     } else {
                                         while($rows = mysqli_fetch_array($query)) {
                                             $has_pending = !empty($rows['pending_status']) && $rows['pending_status'] != $rows['status'];
                                             $row_class = $has_pending ? 'table-warning' : '';
                                             
                                             echo '<tr class="'.$row_class.'">
+                                                <td><strong>'.$rows['order_code'].'</strong></td>
                                                 <td>'.$rows['username'].'</td>
-                                                <td>'.$rows['title'].'</td>
-                                                <td>'.$rows['quantity'].'</td>
-                                                <td>'.number_format($rows['price'], 0, ',', '.').' VNĐ</td>
+                                                <td><span class="badge bg-info">'.$rows['total_items'].' món</span></td>
+                                                <td><strong>'.number_format($rows['total_amount'], 0, ',', '.').' VNĐ</strong></td>
                                                 <td>'.$rows['address'].'</td>';
                                             
-                                            // Status badge - hiển thị cả trạng thái hiện tại và chờ phê duyệt
+                                            // Status badge
                                             echo '<td>';
                                             
-                                            // Trạng thái hiện tại
                                             $status = $rows['status'];
                                             $badge_class = '';
                                             $status_text = '';
@@ -277,30 +293,33 @@ if(empty($_SESSION["adm_id"])) {
                                             
                                             echo '</td>';
                                             
-                                            echo '<td>'.$rows['date'].'</td>
+                                            echo '<td>'.date('d/m/Y H:i', strtotime($rows['date'])).'</td>
                                                 <td>
-                                                    <a href="#" class="btn btn-primary btn-sm" data-id="'.$rows['o_id'].'">
+                                                    <button class="btn btn-primary btn-sm view-order-admin" 
+                                                       data-code="'.$rows['order_code'].'"
+                                                       title="Xem chi tiết">
                                                         <i class="fas fa-eye"></i>
-                                                    </a>';
+                                                    </button>';
                                             
                                             // Nút phê duyệt nếu có trạng thái chờ
                                             if($has_pending) {
                                                 echo '<button class="btn btn-success btn-sm approve-status ms-1" 
-                                                            data-id="'.$rows['o_id'].'" 
+                                                            data-code="'.$rows['order_code'].'" 
                                                             data-status="'.$rows['pending_status'].'"
                                                             title="Phê duyệt trạng thái">
                                                         <i class="fas fa-check"></i>
                                                       </button>
                                                       <button class="btn btn-warning btn-sm reject-pending ms-1" 
-                                                            data-id="'.$rows['o_id'].'"
+                                                            data-code="'.$rows['order_code'].'"
                                                             title="Từ chối phê duyệt">
                                                         <i class="fas fa-times"></i>
                                                       </button>';
                                             }
                                             
-                                            echo '<a href="delete_orders.php?order_del='.$rows['o_id'].'" 
+                                            echo '<a href="delete_orders.php?order_code='.$rows['order_code'].'" 
                                                        onclick="return confirm(\'Bạn có chắc muốn xóa đơn hàng này?\')" 
-                                                       class="btn btn-danger btn-sm ms-1">
+                                                       class="btn btn-danger btn-sm ms-1"
+                                                       title="Xóa đơn hàng">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
                                                 </td>
@@ -317,66 +336,23 @@ if(empty($_SESSION["adm_id"])) {
         </div>
     </div>
 
-    <!-- View Order Modal -->
-    <div class="modal fade" id="viewOrderModal" tabindex="-1">
+    <!-- Modal xem nhanh đơn hàng theo mã đơn -->
+    <div class="modal fade" id="viewOrderCodeModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Thông tin đơn hàng</h5>
+                    <h5 class="modal-title">Chi tiết đơn hàng</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <td style="width: 30%"><strong>Tên đăng nhập:</strong></td>
-                                    <td id="orderUsername"></td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-primary update-status">
-                                            Cập nhật trạng thái
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Món ăn:</strong></td>
-                                    <td id="orderTitle"></td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-primary view-user">
-                                            Thông tin khách hàng
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Số lượng:</strong></td>
-                                    <td id="orderQuantity"></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Giá:</strong></td>
-                                    <td id="orderPrice"></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Địa chỉ:</strong></td>
-                                    <td id="orderAddress"></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Ngày đặt:</strong></td>
-                                    <td id="orderDate"></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Trạng thái:</strong></td>
-                                    <td id="orderStatus"></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="orderCodeModalContent">
+                        <div class="text-center text-muted">Đang tải dữ liệu...</div>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-primary update-order-status-btn">
+                        <i class="fas fa-edit me-1"></i>Cập nhật trạng thái
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
@@ -395,15 +371,15 @@ if(empty($_SESSION["adm_id"])) {
                 </div>
                 <div class="modal-body">
                     <form id="updateStatusForm">
-                        <input type="hidden" id="updateOrderId" name="order_id">
+                        <input type="hidden" id="updateOrderCode" name="order_code">
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <h6 class="text-primary">Thông tin đơn hàng</h6>
+                                <p><strong>Mã đơn:</strong> <span id="updateOrderCodeDisplay"></span></p>
                                 <p><strong>Khách hàng:</strong> <span id="updateCustomerName"></span></p>
-                                <p><strong>Món ăn:</strong> <span id="updateDishName"></span></p>
-                                <p><strong>Số lượng:</strong> <span id="updateQuantity"></span></p>
-                                <p><strong>Giá:</strong> <span id="updatePrice"></span></p>
+                                <p><strong>Số món:</strong> <span id="updateTotalItems"></span></p>
+                                <p><strong>Tổng tiền:</strong> <span id="updateTotalAmount"></span></p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-primary">Trạng thái hiện tại</h6>
@@ -418,21 +394,11 @@ if(empty($_SESSION["adm_id"])) {
                                 <label for="newStatus" class="form-label">Trạng thái mới <span class="text-danger">*</span></label>
                                 <select name="status" id="newStatus" class="form-select" required>
                                     <option value="">Chọn trạng thái</option>
-                                    <option value="preparing">
-                                        <i class="fas fa-hourglass-half"></i> Đang chuẩn bị
-                                    </option>
-                                    <option value="prepared">
-                                        <i class="fas fa-check"></i> Đã chuẩn bị
-                                    </option>
-                                    <option value="in process">
-                                        <i class="fas fa-motorcycle"></i> Đang giao
-                                    </option>
-                                    <option value="closed">
-                                        <i class="fas fa-check-circle"></i> Đã giao
-                                    </option>
-                                    <option value="rejected">
-                                        <i class="fas fa-times-circle"></i> Đã hủy
-                                    </option>
+                                    <option value="preparing">Đang chuẩn bị</option>
+                                    <option value="prepared">Đã chuẩn bị</option>
+                                    <option value="in process">Đang giao</option>
+                                    <option value="closed">Đã giao</option>
+                                    <option value="rejected">Đã hủy</option>
                                 </select>
                             </div>
                         </div>
@@ -502,6 +468,77 @@ if(empty($_SESSION["adm_id"])) {
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Xem nhanh đơn hàng theo mã đơn
+            $(document).on('click', '.view-order-admin', function() {
+                var orderCode = $(this).data('code');
+                var $modal = $('#viewOrderCodeModal');
+                var $content = $('#orderCodeModalContent');
+                $content.html('<div class="text-center text-muted">Đang tải dữ liệu...</div>');
+                $modal.modal('show');
+                
+                // Lưu order_code vào nút cập nhật trạng thái
+                $('.update-order-status-btn').data('code', orderCode);
+                
+                $.ajax({
+                    url: '../order_detail.php',
+                    type: 'GET',
+                    data: { code: orderCode, ajax: 1 },
+                    success: function(data) {
+                        var mainHtml = data;
+                        if(mainHtml.indexOf('<body') !== -1) {
+                            mainHtml = mainHtml.split('<body')[1];
+                            mainHtml = mainHtml.substring(mainHtml.indexOf('>')+1);
+                            mainHtml = mainHtml.split('</body>')[0];
+                        }
+                        $content.html(mainHtml);
+                    },
+                    error: function() {
+                        $content.html('<div class="alert alert-danger">Không thể tải dữ liệu đơn hàng!</div>');
+                    }
+                });
+            });
+            
+            // Nút cập nhật trạng thái từ modal xem chi tiết
+            $(document).on('click', '.update-order-status-btn', function() {
+                var orderCode = $(this).data('code');
+                
+                // Load thông tin đơn hàng để hiển thị trong modal cập nhật
+                $.ajax({
+                    url: 'get_order_by_code.php',
+                    type: 'GET',
+                    data: {code: orderCode},
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.success) {
+                            const data = response.data;
+                            
+                            // Populate update modal
+                            $('#updateOrderCode').val(orderCode);
+                            $('#updateOrderCodeDisplay').text(orderCode);
+                            $('#updateCustomerName').text(data.username);
+                            $('#updateTotalItems').text(data.total_items + ' món');
+                            $('#updateTotalAmount').text(data.total_amount);
+                            
+                            // Show current status
+                            let statusHtml = getStatusBadge(data.status);
+                            $('#updateCurrentStatus').html(statusHtml);
+                            
+                            // Reset form
+                            $('#newStatus').val('');
+                            $('#updateRemark').val('');
+                            
+                            // Hide view modal and show update modal
+                            $('#viewOrderCodeModal').modal('hide');
+                            $('#updateOrderModal').modal('show');
+                        } else {
+                            alert('Không thể tải thông tin đơn hàng!');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Lỗi: ' + error);
+                    }
+                });
+            });
             $('#orderTable').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
@@ -596,7 +633,7 @@ if(empty($_SESSION["adm_id"])) {
             // Handle save status update
             $('#saveStatusUpdate').click(function() {
                 const formData = {
-                    order_id: parseInt($('#updateOrderId').val()),
+                    order_code: $('#updateOrderCode').val(),
                     status: $('#newStatus').val(),
                     remark: $('#updateRemark').val().trim()
                 };
@@ -632,14 +669,9 @@ if(empty($_SESSION["adm_id"])) {
                     data: JSON.stringify(formData),
                     success: function(response) {
                         if(response.success) {
-                            // Show success message
-                            showNotification('success', 'Cập nhật trạng thái thành công!');
-                            
-                            // Update the table row
-                            updateTableRow(formData.order_id, response.data);
-                            
-                            // Close modal
+                            alert('Cập nhật trạng thái thành công!');
                             $('#updateOrderModal').modal('hide');
+                            location.reload();
                         } else {
                             alert('Lỗi: ' + response.message);
                         }
@@ -648,7 +680,6 @@ if(empty($_SESSION["adm_id"])) {
                         alert('Không thể cập nhật trạng thái: ' + error);
                     },
                     complete: function() {
-                        // Restore button
                         $saveBtn.html(originalText).prop('disabled', false);
                     }
                 });
@@ -778,14 +809,14 @@ if(empty($_SESSION["adm_id"])) {
             // Handle approve status
             $(document).on('click', '.approve-status', function(e) {
                 e.preventDefault();
-                const orderId = $(this).data('id');
+                const orderCode = $(this).data('code');
                 
                 if(confirm('Bạn có chắc muốn phê duyệt trạng thái này?')) {
                     $.ajax({
                         url: 'approve_order_status.php',
                         type: 'POST',
                         data: {
-                            order_id: orderId,
+                            order_code: orderCode,
                             action: 'approve'
                         },
                         dataType: 'json',
@@ -807,14 +838,14 @@ if(empty($_SESSION["adm_id"])) {
                                             // Handle reject pending status
                                             $(document).on('click', '.reject-pending', function(e) {
                                                 e.preventDefault();
-                                                const orderId = $(this).data('id');
+                                                const orderCode = $(this).data('code');
                                                 
                                                 if(confirm('Bạn có chắc muốn từ chối cập nhật trạng thái này?')) {
                                                     $.ajax({
                                                         url: 'approve_order_status.php',
                                                         type: 'POST',
                                                         data: {
-                                                            order_id: orderId,
+                                                            order_code: orderCode,
                                                             action: 'reject'
                                                         },
                                                         dataType: 'json',

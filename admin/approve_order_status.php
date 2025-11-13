@@ -9,18 +9,18 @@ if(empty($_SESSION["adm_id"])) {
 }
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $order_id = (int)$_POST['order_id'];
+    $order_code = mysqli_real_escape_string($db, $_POST['order_code']);
     $action = $_POST['action']; // 'approve' hoặc 'reject'
     $admin_id = $_SESSION["adm_id"];
     
     if($action == 'approve') {
-        // Phê duyệt: chuyển pending_status thành status chính thức
+        // Phê duyệt: chuyển pending_status thành status chính thức cho tất cả items trong order_code
         $update_query = "UPDATE users_orders SET 
                          status = pending_status,
                          pending_status = NULL,
                          approved_by = '$admin_id',
                          approved_at = NOW()
-                         WHERE o_id = '$order_id' AND pending_status IS NOT NULL";
+                         WHERE order_code = '$order_code' AND pending_status IS NOT NULL";
         
         if(mysqli_query($db, $update_query)) {
             if(mysqli_affected_rows($db) > 0) {
@@ -33,10 +33,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
     } elseif($action == 'reject') {
-        // Từ chối: xóa pending_status
+        // Từ chối: xóa pending_status cho tất cả items trong order_code
         $update_query = "UPDATE users_orders SET 
                          pending_status = NULL
-                         WHERE o_id = '$order_id' AND pending_status IS NOT NULL";
+                         WHERE order_code = '$order_code' AND pending_status IS NOT NULL";
         
         if(mysqli_query($db, $update_query)) {
             if(mysqli_affected_rows($db) > 0) {
