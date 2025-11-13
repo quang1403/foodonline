@@ -1,6 +1,6 @@
 <?php
 // Sử dụng đường dẫn tuyệt đối
-require_once $_SERVER['DOCUMENT_ROOT'] . '/connection/connect.php';
+require_once __DIR__ . '/../../../connection/connect.php';
 
 class FoodChatModel {
     private $conn;
@@ -204,13 +204,27 @@ class FoodChatModel {
     }
     
     /**
-     * Lấy danh sách nhà hàng
+     * Lấy danh sách nhà hàng (có thể filter theo location)
      */
-    public function getRestaurants($limit = 10) {
-        $stmt = $this->conn->prepare("
-            SELECT * FROM restaurant WHERE status = 1 LIMIT ?
-        ");
-        $stmt->bind_param("i", $limit);
+    public function getRestaurants($location = null) {
+        if ($location) {
+            $sql = "SELECT * FROM restaurant 
+                    WHERE LOWER(address) LIKE ? AND status = 1
+                    ORDER BY title ASC 
+                    LIMIT 10";
+            
+            $stmt = $this->conn->prepare($sql);
+            $search = '%' . strtolower($location) . '%';
+            $stmt->bind_param("s", $search);
+        } else {
+            $sql = "SELECT * FROM restaurant 
+                    WHERE status = 1
+                    ORDER BY title ASC 
+                    LIMIT 20";
+            
+            $stmt = $this->conn->prepare($sql);
+        }
+        
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -360,5 +374,47 @@ class FoodChatModel {
         }
         
         return $restaurants;
+    }
+    
+    /**
+     * L?y th�ng tin chi ti?t m�n an theo ID
+     */
+    public function getDishById($dish_id) {
+        $sql = "SELECT d.*, r.title as restaurant_name, r.address, r.phone, r.rs_id
+                FROM dishes d 
+                LEFT JOIN restaurant r ON d.rs_id = r.rs_id 
+                WHERE d.d_id = ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $dish_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
+    
+    /**
+     * L?y danh s�ch m�n an theo t�n nh� h�ng
+     */
+    public function getDishesByRestaurant($restaurant_name) {
+        $sql = "SELECT d.*, r.title as restaurant_name, r.address, r.rs_id
+                FROM dishes d 
+                INNER JOIN restaurant r ON d.rs_id = r.rs_id 
+                WHERE LOWER(r.title) LIKE ?
+                ORDER BY d.title ASC
+                LIMIT 20";
+        
+        $stmt = $this->conn->prepare($sql);
+        $search = '%' . strtolower($restaurant_name) . '%';
+        $stmt->bind_param("s", $search);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $dishes = [];
+        while ($row = $result->fetch_assoc()) {
+            $dishes[] = $row;
+        }
+        
+        return $dishes;
     }
 }

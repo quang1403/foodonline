@@ -1,11 +1,14 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/food-chatbox/src/models/FoodChatModel.php';
+require_once __DIR__ . '/../models/FoodChatModel.php';
+require_once __DIR__ . '/../services/OpenAIService.php';
 
 class FoodChatController {
     private $model;
+    private $openai;
     
     public function __construct() {
         $this->model = new FoodChatModel();
+        $this->openai = new OpenAIService();
     }
     
     /**
@@ -19,8 +22,44 @@ class FoodChatController {
             // Lưu tin nhắn của user
             $this->model->saveMessage($conversation['id'], 'user', $message);
             
-            // Xử lý và tạo phản hồi
-            $reply = $this->generateReply($message, $conversation['id']);
+            // Lấy lịch sử hội thoại
+            $history = $this->model->getConversationHistory($conversation['id'], 10);
+            
+            // Xây dựng messages cho OpenAI
+            $messages = $this->openai->buildMessages($history, $message);
+            
+            // Gọi OpenAI API với Function Calling
+            $response = $this->openai->sendMessage($messages, AI_FUNCTIONS);
+            
+            $reply = '';
+            $functionCalled = false;
+            
+            // Xử lý response
+            if (isset($response['message']['function_call'])) {
+                // AI muốn gọi function
+                $functionCalled = true;
+                $functionName = $response['message']['function_call']['name'];
+                $functionArgs = json_decode($response['message']['function_call']['arguments'], true);
+                
+                // Thực thi function
+                $functionResult = $this->executeFunction($functionName, $functionArgs);
+                
+                // Gửi lại kết quả cho AI để tạo response cuối cùng
+                $messages[] = $response['message'];
+                $messages[] = [
+                    'role' => 'function',
+                    'name' => $functionName,
+                    'content' => json_encode($functionResult, JSON_UNESCAPED_UNICODE)
+                ];
+                
+                // Gọi lại OpenAI để có response cuối cùng
+                $finalResponse = $this->openai->sendMessage($messages);
+                $reply = $finalResponse['message']['content'];
+                
+            } else {
+                // Response thông thường
+                $reply = $response['message']['content'];
+            }
             
             // Lưu tin nhắn phản hồi
             $this->model->saveMessage($conversation['id'], 'assistant', $reply);
@@ -28,14 +67,99 @@ class FoodChatController {
             return [
                 'success' => true,
                 'reply' => $reply,
-                'conversation_id' => $conversation['id']
+                'conversation_id' => $conversation['id'],
+                'function_called' => $functionCalled
             ];
             
         } catch (Exception $e) {
+            // Fallback về logic cũ nếu OpenAI fail
+            return $this->fallbackResponse($message, $session_id, $user_id, $e->getMessage());
+        }
+    }
+    
+    /**
+     * Fallback response khi OpenAI không hoạt động
+     */
+    private function fallbackResponse($message, $session_id, $user_id, $error) {
+        try {
+            $conversation = $this->model->getOrCreateConversation($session_id, $user_id);
+            $this->model->saveMessage($conversation['id'], 'user', $message);
+            
+            $reply = $this->generateReply($message, $conversation['id']);
+            
+            $this->model->saveMessage($conversation['id'], 'assistant', $reply);
+            
+            return [
+                'success' => true,
+                'reply' => $reply,
+                'conversation_id' => $conversation['id'],
+                'fallback' => true,
+                'error' => $error
+            ];
+        } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => 'Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
             ];
+        }
+    }
+    
+    /**
+     * Thực thi function được AI gọi
+     */
+    private function executeFunction($functionName, $args) {
+        switch ($functionName) {
+            case 'search_dishes':
+                $keyword = $args['keyword'] ?? '';
+                $dishes = $this->model->searchFood($keyword, 8);
+                return [
+                    'success' => true,
+                    'dishes' => $dishes,
+                    'count' => count($dishes),
+                    'keyword' => $keyword
+                ];
+                
+            case 'get_featured_dishes':
+                $limit = $args['limit'] ?? 6;
+                $dishes = $this->model->getBestSellingFoods($limit);
+                return [
+                    'success' => true,
+                    'dishes' => $dishes,
+                    'count' => count($dishes)
+                ];
+                
+            case 'get_dish_details':
+                $dishId = $args['dish_id'] ?? 0;
+                $dish = $this->model->getDishById($dishId);
+                return [
+                    'success' => $dish !== null,
+                    'dish' => $dish
+                ];
+                
+            case 'get_restaurants':
+                $location = $args['location'] ?? null;
+                $restaurants = $this->model->getRestaurants($location);
+                return [
+                    'success' => true,
+                    'restaurants' => $restaurants,
+                    'count' => count($restaurants)
+                ];
+                
+            case 'get_dishes_by_restaurant':
+                $restaurantName = $args['restaurant_name'] ?? '';
+                $dishes = $this->model->getDishesByRestaurant($restaurantName);
+                return [
+                    'success' => true,
+                    'dishes' => $dishes,
+                    'count' => count($dishes),
+                    'restaurant_name' => $restaurantName
+                ];
+                
+            default:
+                return [
+                    'success' => false,
+                    'error' => 'Function not found: ' . $functionName
+                ];
         }
     }
     

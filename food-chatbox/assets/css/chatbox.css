@@ -292,3 +292,56 @@
 .chat-notification.show {
     display: flex;
 }
+/* Food Card Action Buttons */
+.chat-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 5px;
+}
+
+.chat-action-btn {
+    flex: 1;
+    padding: 10px 15px;
+    border-radius: 20px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.chat-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.chat-action-btn:active {
+    transform: translateY(0);
+}
+
+.chat-action-btn i {
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .chat-window {
+        width: calc(100vw - 20px);
+        height: calc(100vh - 100px);
+        bottom: 70px;
+        right: 10px;
+    }
+    
+    .chat-actions {
+        flex-direction: column;
+    }
+    
+    .chat-action-btn {
+        width: 100%;
+    }
+}

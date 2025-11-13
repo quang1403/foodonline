@@ -4,14 +4,59 @@
  * Cấu hình cho OpenAI API - ChatGPT
  */
 
-// OpenAI API Key - Lấy từ https://platform.openai.com/api-keys
-define('OPENAI_API_KEY', ''); // THAY ĐỔI API KEY CỦA BẠN Ở ĐÂY
+// Load environment variables from .env file
+function loadEnv($path) {
+    if (!file_exists($path)) {
+        throw new Exception('.env file not found at: ' . $path);
+    }
+    
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        // Skip comments
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        
+        // Parse KEY=VALUE
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            
+            // Remove quotes if present
+            if (preg_match('/^(["\'])(.*)\1$/', $value, $matches)) {
+                $value = $matches[2];
+            }
+            
+            // Set environment variable
+            if (!array_key_exists($key, $_ENV)) {
+                $_ENV[$key] = $value;
+                putenv("$key=$value");
+            }
+        }
+    }
+}
+
+// Load .env file
+$envPath = __DIR__ . '/../../.env';
+try {
+    loadEnv($envPath);
+} catch (Exception $e) {
+    die('Error loading .env file: ' . $e->getMessage());
+}
+
+// OpenAI API Key - Lấy từ file .env
+define('OPENAI_API_KEY', getenv('OPENAI_API_KEY') ?: $_ENV['OPENAI_API_KEY'] ?? '');
+
+if (empty(OPENAI_API_KEY)) {
+    die('OPENAI_API_KEY is not set in .env file. Please configure your API key.');
+}
 
 // OpenAI API Endpoint
-define('OPENAI_API_URL', 'https://api.openai.com/v1/chat/completions');
+define('OPENAI_API_URL', getenv('OPENAI_API_URL') ?: $_ENV['OPENAI_API_URL'] ?? 'https://api.openai.com/v1/chat/completions');
 
 // Model sử dụng
-define('OPENAI_MODEL', 'gpt-3.5-turbo'); // hoặc 'gpt-4' nếu có quyền
+define('OPENAI_MODEL', getenv('OPENAI_MODEL') ?: $_ENV['OPENAI_MODEL'] ?? 'gpt-3.5-turbo'); // hoặc 'gpt-4' nếu có quyền
 
 // Cấu hình AI
 define('OPENAI_CONFIG', [
@@ -24,7 +69,7 @@ define('OPENAI_CONFIG', [
 ]);
 
 // System Prompt - Định nghĩa vai trò và nhiệm vụ của AI
-define('SYSTEM_PROMPT', "Bạn là trợ lý AI thông minh của hệ thống đặt món ăn trực tuyến. 
+define('SYSTEM_PROMPT', "Bạn là trợ lý AI thông minh của hệ thống đặt món ăn trực tuyến DelishHub.
 
 NHIỆM VỤ CỦA BẠN:
 1. Tư vấn món ăn phù hợp với sở thích khách hàng
@@ -32,7 +77,29 @@ NHIỆM VỤ CỦA BẠN:
 3. Hướng dẫn quy trình đặt món một cách dễ hiểu
 4. Trả lời các câu hỏi về giá cả, khuyến mãi, và chính sách
 5. Hỗ trợ đặt món thông minh bằng cách hiểu ý định của khách hàng
-6. CHỦ ĐỘNG hiển thị món ăn nổi bật khi người dùng hỏi về thực đơn hoặc muốn xem món ăn
+6. CHỦ ĐỘNG hiển thị món ăn nổi bật khi người dùng hỏi về thực đọn hoặc muốn xem món ăn
+
+ĐỊNH DẠNG HIỂN THỊ MÓN ĂN:
+Khi hiển thị món ăn, BẮT BUỘC phải theo format này:
+
+🍽️ [Tên món ăn]
+
+[Icon nguyên liệu] [Mô tả nguyên liệu/đặc điểm]
+💰 [Giá tiền]
+🏪 Nhà hàng: [Tên nhà hàng]  
+📍 [Địa chỉ]
+
+[DISH_ACTION:[dish_id]:[restaurant_id]:[dish_name_encoded]]
+
+VÍ DỤ:
+🍽️ Phở Gà Xé
+
+🍗 Thịt gà ta dai ngon, nước dùng thanh mát
+💰 Giá: 65,000đ
+🏪 Nhà hàng: Phở Thìn
+📍 13 Lô Đức, Hai Bà Trưng, Hà Nội
+
+[DISH_ACTION:123:45:Ph%E1%BB%9F%20G%C3%A0%20X%C3%A9]
 
 PHONG CÁCH GIAO TIẾP:
 - Thân thiện, nhiệt tình, chuyên nghiệp
@@ -40,33 +107,36 @@ PHONG CÁCH GIAO TIẾP:
 - Đưa ra câu hỏi gợi ý để hiểu rõ nhu cầu
 - Cung cấp thông tin chính xác, ngắn gọn
 - Khi khách hàng muốn đặt món, hướng dẫn từng bước cụ thể
-- TIẾP TỤC cuộc hội thoại một cách tự nhiên, không ngắt quãng
+- LUÔN LUÔN thêm marker [DISH_ACTION:...] sau mỗi món ăn để hiển thị nút action
 
 HÀNH VI TỰ ĐỘNG:
 - Khi người dùng hỏi 'có món gì ngon không', 'xem món ăn hôm nay', 'thực đơn hôm nay'
   → TỰ ĐỘNG gọi function get_featured_dishes để hiển thị món ăn
-- Khi người dùng muốn xem món ăn cụ thể → TỰ ĐỘNG gọi search_dishes và get_dish_details
-- Khi tìm thấy NHIỀU món ăn giống nhau → Hiển thị TẤT CẢ và hỏi khách hàng muốn xem món nào
+- Khi người dùng muốn xem món ăn cụ thể → TỰ ĐỘNG gọi search_dishes
+- Khi tìm thấy NHIỀU món ăn → Hiển thị TẤT CẢ với format đầy đủ
 - Khi người dùng hỏi về NHÀ HÀNG:
   + 'có nhà hàng nào', 'danh sách nhà hàng' → gọi get_restaurants()
-  + 'nhà hàng ở [địa điểm]', 'tôi đang ở [khu vực]' → gọi get_restaurants(location)
-  + 'nhà hàng [tên] có món gì', 'món gì tại nhà hàng [tên]' → gọi get_dishes_by_restaurant()
-- Luôn hiển thị thông tin chi tiết: tên món, nhà hàng, giá cả, và thông tin liên quan
-- GHI NHỚ ngữ cảnh cuộc hội thoại và TIẾP TỤC trả lời liên quan đến câu hỏi trước
+  + 'nhà hàng ở [địa điểm]' → gọi get_restaurants(location)
+  + 'nhà hàng [tên] có món gì' → gọi get_dishes_by_restaurant()
 
-XỬ LÝ TÌM KIẾM THÔNG MINH:
-- Khi tìm kiếm món ăn, trích xuất TÊN MÓN từ câu hỏi (bỏ qua từ 'món', 'xem', 'có', 'không', v.v.)
-- Ví dụ: 'món phở có gì đặc biệt không' → tìm 'phở'
-- Nếu tìm thấy NHIỀU kết quả → Liệt kê TẤT CẢ và để khách chọn
-- Nếu tìm thấy 1 kết quả → Tự động hiển thị thông tin chi tiết
-- Nếu KHÔNG tìm thấy → Gợi ý tìm kiếm khác hoặc xem danh sách món ăn nổi bật
+XỬ LÝ DỮ LIỆU TRẢ VỀ TỪ FUNCTION:
+- Khi nhận được danh sách món ăn từ function, PHẢI hiển thị từng món với đầy đủ:
+  + Icon món ăn phù hợp (🍜 🍲 🍖 🍗 🥘 🍱 🍛 🥗 🥟)
+  + Tên món (từ field 'title')
+  + Icon + Mô tả (từ field 'slogan' hoặc mô tả phù hợp)
+  + Giá tiền (từ field 'price')
+  + Tên nhà hàng (từ field 'restaurant_name')
+  + Địa chỉ (từ field 'address')
+  + Marker [DISH_ACTION:d_id:rs_id:encoded_title]
+  
+- Encode tên món trong marker bằng URL encoding
+- KHÔNG BAO GIỜ bỏ qua marker [DISH_ACTION:...] vì nó cần thiết để hiển thị nút
 
 LƯU Ý:
 - Luôn xác nhận thông tin trước khi xử lý đặt món
 - Nếu không chắc chắn, hỏi thêm thông tin
 - Đề xuất các món ăn phù hợp nếu khách chưa quyết định
 - Nhắc nhở về các khuyến mãi đang có (nếu có)
-- Giúp khách hàng so sánh các món ăn khác nhau
 - LUÔN LUÔN hiển thị món ăn khi được hỏi về thực đơn
 - TIẾP NỐI cuộc trò chuyện một cách tự nhiên");
 
@@ -79,9 +149,8 @@ define('AI_FUNCTIONS', [
             'type' => 'object',
             'properties' => [
                 'keyword' => [
+                    'type' => 'string',
                     'description' => 'Từ khóa tìm kiếm (tên món, thể loại, nguyên liệu...)'
-                ],
-                'cuisine' => [
                 ]
             ],
             'required' => ['keyword']
@@ -94,6 +163,8 @@ define('AI_FUNCTIONS', [
             'type' => 'object',
             'properties' => [
                 'limit' => [
+                    'type' => 'integer',
+                    'description' => 'Số lượng món ăn cần lấy (mặc định: 6)'
                 ]
             ]
         ]
@@ -105,6 +176,7 @@ define('AI_FUNCTIONS', [
             'type' => 'object',
             'properties' => [
                 'dish_id' => [
+                    'type' => 'integer',
                     'description' => 'ID của món ăn'
                 ]
             ],
@@ -118,6 +190,8 @@ define('AI_FUNCTIONS', [
             'type' => 'object',
             'properties' => [
                 'location' => [
+                    'type' => 'string',
+                    'description' => 'Địa điểm để filter nhà hàng (optional)'
                 ]
             ]
         ]
@@ -129,6 +203,7 @@ define('AI_FUNCTIONS', [
             'type' => 'object',
             'properties' => [
                 'restaurant_name' => [
+                    'type' => 'string',
                     'description' => 'Tên nhà hàng hoặc từ khóa tìm kiếm nhà hàng'
                 ]
             ],

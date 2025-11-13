@@ -1,0 +1,12 @@
+# Ignore environment variables file
+.env
+
+# Ignore node modules
+node_modules/
+
+# Ignore composer vendor
+vendor/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
