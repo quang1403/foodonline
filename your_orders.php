@@ -227,29 +227,56 @@ if(empty($_SESSION['user_id'])) {
                         <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Món ăn</th>
-                                    <th>Số lượng</th>
-                                    <th>Giá</th>
-                                    <th>Trạng thái</th>
+                                    <th>Mã đơn</th>
                                     <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Tổng tiền</th>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php 
-                                $query_res = mysqli_query($db,"SELECT * FROM users_orders WHERE u_id='".$_SESSION['user_id']."' ORDER BY date DESC");
-                                if(!mysqli_num_rows($query_res) > 0) {
-                                    echo '<tr><td colspan="6" class="text-center">Không có đơn hàng nào.</td></tr>';
+                                <?php
+                                // Lấy danh sách các order_code hoặc date của user (group by order_code nếu có, nếu không thì date)
+                                $orders = [];
+                                $q = mysqli_query($db, "SELECT COALESCE(order_code, DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s')) as order_id, MIN(date) as min_date 
+                                                        FROM users_orders 
+                                                        WHERE u_id='".$_SESSION['user_id']."' 
+                                                        GROUP BY order_id 
+                                                        ORDER BY min_date DESC");
+                                while($r = mysqli_fetch_assoc($q)) {
+                                    $orders[] = $r['order_id'];
+                                }
+                                if(empty($orders)) {
+                                    echo '<tr><td colspan="5" class="text-center">Không có đơn hàng nào.</td></tr>';
                                 } else {
-                                    while($row = mysqli_fetch_array($query_res)) {
-                                ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($row['title']); ?></td>
-                                    <td><?php echo $row['quantity']; ?></td>
-                                    <td><?php echo number_format($row['price'], 0, ',', '.'); ?> VNĐ</td>
-                                    <td>
-                                        <?php 
-                                        $status = $row['status'];
+                                    foreach($orders as $order_id) {
+                                        // Lấy tất cả món trong đơn này
+                                        $items = [];
+                                        $total = 0;
+                                        $status = '';
+                                        $date = '';
+                                        $address = '';
+                                        
+                                        // Kiểm tra xem order_id là order_code hay timestamp
+                                        $q2 = mysqli_query($db, "SELECT * FROM users_orders 
+                                                                WHERE u_id='".$_SESSION['user_id']."' 
+                                                                AND (order_code='".$order_id."' OR DATE_FORMAT(date, '%Y-%m-%d %H:%i:%s')='".$order_id."')");
+                                        while($item = mysqli_fetch_assoc($q2)) {
+                                            $items[] = $item;
+                                            $total += $item['price'] * $item['quantity'];
+                                            $status = $item['status'];
+                                            $date = $item['date'];
+                                            $address = $item['address'];
+                                        }
+                                        
+                                        // Tạo mã đơn hiển thị
+                                        $display_code = !empty($items[0]['order_code']) ? $items[0]['order_code'] : 'DH'.date('YmdHis', strtotime($date));
+                                        
+                                        // Hiển thị dòng đơn hàng
+                                        echo '<tr>';
+                                        echo '<td>'.$display_code.'</td>';
+                                        echo '<td>'.date('d/m/Y H:i', strtotime($date)).'</td>';
+                                        echo '<td>';
                                         switch($status) {
                                             case "NULL":
                                             case "":
@@ -271,22 +298,66 @@ if(empty($_SESSION['user_id'])) {
                                                 echo '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>';
                                                 break;
                                         }
-                                        ?>
-                                    </td>
-                                    <td><?php echo date('d/m/Y H:i', strtotime($row['date'])); ?></td>
-                                    <td>
-                                        <?php if($status != "closed" && $status != "rejected") { ?>
-                                        <a href="delete_orders.php?order_del=<?php echo $row['o_id']; ?>" 
-                                           onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?');" 
-                                           class="btn btn-danger btn-sm">
-                                            <i class="fas fa-times me-1"></i>Hủy
-                                        </a>
-                                        <?php } ?>
-                                    </td>
-                                </tr>
-                                <?php 
+                                        echo '</td>';
+                                        echo '<td>'.number_format($total, 0, ',', '.').' VNĐ</td>';
+                                        echo '<td>';
+                                        echo '<button class="btn btn-info btn-sm text-white view-order-detail" data-order="'.htmlspecialchars($order_id).'"><i class="fas fa-eye me-1"></i>Chi tiết</button> ';
+                                        if($status != "closed" && $status != "rejected") {
+                                            echo '<a href="delete_orders.php?order_id='.urlencode($order_id).'" onclick="return confirm(\'Bạn có chắc muốn hủy đơn hàng này?\');" class="btn btn-danger btn-sm"><i class="fas fa-times me-1"></i>Hủy</a>';
+                                        } else if($status == "rejected") {
+                                            echo '<a href="delete_orders.php?order_id='.urlencode($order_id).'&delete=1" onclick="return confirm(\'Bạn có chắc muốn xóa đơn hàng này?\');" class="btn btn-secondary btn-sm"><i class="fas fa-trash me-1"></i>Xóa</a>';
+                                        }
+                                        echo '</td>';
+                                        echo '</tr>';
+                                        // Modal chi tiết đơn hàng (ẩn, sẽ show bằng JS)
+                                        $modal_id = 'orderDetailModal-'.md5($order_id);
+                                        echo '<div class="modal fade" id="'.$modal_id.'" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">';
+                                        echo '<div class="modal-header"><h5 class="modal-title">Chi tiết đơn hàng '.$display_code.'</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>';
+                                        echo '<div class="modal-body">';
+                                        echo '<div class="mb-2"><b>Thời gian đặt:</b> '.date('d/m/Y H:i', strtotime($date)).'</div>';
+                                        echo '<div class="mb-2"><b>Địa chỉ giao hàng:</b> '.htmlspecialchars($address).'</div>';
+                                        echo '<div class="mb-2"><b>Trạng thái:</b> ';
+                                        switch($status) {
+                                            case "NULL":
+                                            case "":
+                                                echo '<span class="badge bg-secondary"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
+                                                break;
+                                            case "preparing":
+                                                echo '<span class="badge bg-info"><i class="fas fa-hourglass-half me-1"></i>Đang chuẩn bị</span>';
+                                                break;
+                                            case "prepared":
+                                                echo '<span class="badge bg-primary"><i class="fas fa-check me-1"></i>Đã chuẩn bị</span>';
+                                                break;
+                                            case "in process":
+                                                echo '<span class="badge bg-warning"><i class="fas fa-motorcycle me-1"></i>Đang giao</span>';
+                                                break;
+                                            case "closed":
+                                                echo '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Đã giao</span>';
+                                                break;
+                                            case "rejected":
+                                                echo '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>';
+                                                break;
+                                        }
+                                        echo '</div>';
+                                        echo '<div class="mb-2"><b>Danh sách món:</b></div>';
+                                        echo '<ul class="list-group mb-3">';
+                                        foreach($items as $it) {
+                                            echo '<li class="list-group-item d-flex justify-content-between align-items-center">'.htmlspecialchars($it['title']).' <span class="badge bg-primary">x'.$it['quantity'].'</span> <span>'.number_format($it['price'],0,',','.').' VNĐ</span></li>';
+                                        }
+                                        echo '</ul>';
+                                        echo '<div class="mb-2"><b>Tổng tiền:</b> '.number_format($total,0,',','.').' VNĐ</div>';
+                                        echo '</div>';
+                                        echo '<div class="modal-footer">';
+                                        if($status != "closed" && $status != "rejected") {
+                                            echo '<a href="delete_orders.php?order_id='.urlencode($order_id).'" onclick="return confirm(\'Bạn có chắc muốn hủy đơn hàng này?\');" class="btn btn-danger"><i class="fas fa-times me-1"></i>Hủy đơn</a>';
+                                        } else if($status == "rejected") {
+                                            echo '<a href="delete_orders.php?order_id='.urlencode($order_id).'&delete=1" onclick="return confirm(\'Bạn có chắc muốn xóa đơn hàng này?\');" class="btn btn-secondary"><i class="fas fa-trash me-1"></i>Xóa đơn</a>';
+                                        }
+                                        echo '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>';
+                                        echo '</div>';
+                                        echo '</div></div></div>';
                                     }
-                                } 
+                                }
                                 ?>
                             </tbody>
                         </table>
@@ -302,5 +373,26 @@ if(empty($_SESSION['user_id'])) {
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+    $(function() {
+        $('.view-order-detail').click(function() {
+            var orderId = $(this).data('order');
+            var modalId = '#orderDetailModal-' + md5(orderId);
+            $(modalId).modal('show');
+        });
+        
+        function md5(str) {
+            // Simple hash function for modal ID
+            var hash = 0;
+            if (str.length == 0) return hash;
+            for (var i = 0; i < str.length; i++) {
+                var char = str.charCodeAt(i);
+                hash = ((hash<<5)-hash)+char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        }
+    });
+    </script>
 </body>
 </html>
