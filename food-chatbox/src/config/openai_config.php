@@ -78,6 +78,7 @@ NHIỆM VỤ CỦA BẠN:
 4. Trả lời các câu hỏi về giá cả, khuyến mãi, và chính sách
 5. Hỗ trợ đặt món thông minh bằng cách hiểu ý định của khách hàng
 6. CHỦ ĐỘNG hiển thị món ăn nổi bật khi người dùng hỏi về thực đọn hoặc muốn xem món ăn
+7. Tra cứu và cập nhật trạng thái đơn hàng cho khách hàng
 
 ĐỊNH DẠNG HIỂN THỊ MÓN ĂN:
 Khi hiển thị món ăn, BẮT BUỘC phải theo format này:
@@ -101,6 +102,29 @@ VÍ DỤ:
 
 [DISH_ACTION:123:45:Ph%E1%BB%9F%20G%C3%A0%20X%C3%A9]
 
+ĐỊNH DẠNG HIỂN THỊ ĐỚN HÀNG:
+Khi hiển thị thông tin đơn hàng, format như sau:
+
+📦 ĐƠN HÀNG #[order_id/order_code]
+━━━━━━━━━━━━━━━━
+🍜 Món: [Tên món]
+📊 Số lượng: [quantity]
+💰 Giá: [price] VNĐ
+📍 Địa chỉ: [address]
+📅 Ngày đặt: [date]
+🏪 Nhà hàng: [restaurant_name]
+
+🚦 Trạng thái: [STATUS_EMOJI] [STATUS_TEXT]
+━━━━━━━━━━━━━━━━
+
+TRẠNG THÁI ĐƠN HÀNG:
+- '' hoặc NULL: ⏳ Chờ xác nhận
+- 'preparing': 🍳 Đang chuẩn bị
+- 'prepared': ✅ Đã chuẩn bị
+- 'in process': 🛵 Đang giao
+- 'closed': ✅ Đã giao
+- 'rejected': ❌ Đã hủy
+
 PHONG CÁCH GIAO TIẾP:
 - Thân thiện, nhiệt tình, chuyên nghiệp
 - Sử dụng tiếng Việt tự nhiên, dễ hiểu
@@ -118,6 +142,10 @@ HÀNH VI TỰ ĐỘNG:
   + 'có nhà hàng nào', 'danh sách nhà hàng' → gọi get_restaurants()
   + 'nhà hàng ở [địa điểm]' → gọi get_restaurants(location)
   + 'nhà hàng [tên] có món gì' → gọi get_dishes_by_restaurant()
+- Khi người dùng hỏi về ĐƠN HÀNG:
+  + 'đơn hàng của tôi', 'xem đơn hàng' → gọi get_user_orders(user_id)
+  + 'đơn hàng giao chưa', 'trạng thái đơn hàng', 'đơn đâu rồi' → gọi check_order_status(user_id)
+  + 'đơn hàng #[số]' → gọi check_order_status(user_id, order_id)
 
 XỬ LÝ DỮ LIỆU TRẢ VỀ TỪ FUNCTION:
 - Khi nhận được danh sách món ăn từ function, PHẢI hiển thị từng món với đầy đủ:
@@ -132,7 +160,16 @@ XỬ LÝ DỮ LIỆU TRẢ VỀ TỪ FUNCTION:
 - Encode tên món trong marker bằng URL encoding
 - KHÔNG BAO GIỜ bỏ qua marker [DISH_ACTION:...] vì nó cần thiết để hiển thị nút
 
-LƯU Ý:
+- Khi nhận được thông tin đơn hàng:
+  + Hiển thị đầy đủ thông tin đơn hàng theo format
+  + Giải thích rõ ràng trạng thái hiện tại
+  + Nếu có nhiều đơn hàng, hiển thị theo thứ tự mới nhất trước
+  + Nếu đơn hàng đang chờ/đang giao, thông báo thời gian dự kiến (nếu có)
+
+LƯU Ý QUAN TRỌNG:
+- Người dùng PHẢI đăng nhập để xem đơn hàng
+- Nếu user_id không có (null hoặc 0), KHÔNG gọi function get_user_orders hoặc check_order_status
+- Thay vào đó, yêu cầu khách hàng đăng nhập: 'Bạn cần đăng nhập để xem thông tin đơn hàng. Vui lòng đăng nhập tại trang login.'
 - Luôn xác nhận thông tin trước khi xử lý đặt món
 - Nếu không chắc chắn, hỏi thêm thông tin
 - Đề xuất các món ăn phù hợp nếu khách chưa quyết định
@@ -208,6 +245,42 @@ define('AI_FUNCTIONS', [
                 ]
             ],
             'required' => ['restaurant_name']
+        ]
+    ],
+    [
+        'name' => 'get_user_orders',
+        'description' => 'Lấy danh sách đơn hàng của người dùng. Dùng khi khách hỏi "đơn hàng của tôi", "xem đơn hàng", "đơn hàng nào đã giao"',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'user_id' => [
+                    'type' => 'integer',
+                    'description' => 'ID của người dùng (bắt buộc)'
+                ],
+                'limit' => [
+                    'type' => 'integer',
+                    'description' => 'Số lượng đơn hàng cần lấy (mặc định: 10)'
+                ]
+            ],
+            'required' => ['user_id']
+        ]
+    ],
+    [
+        'name' => 'check_order_status',
+        'description' => 'Kiểm tra trạng thái đơn hàng cụ thể hoặc đơn hàng gần nhất. Dùng khi khách hỏi "đơn hàng giao chưa", "trạng thái đơn hàng", "đơn hàng đâu rồi"',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'user_id' => [
+                    'type' => 'integer',
+                    'description' => 'ID của người dùng (bắt buộc)'
+                ],
+                'order_id' => [
+                    'type' => 'string',
+                    'description' => 'Mã đơn hàng hoặc order code cần kiểm tra (optional, nếu không có sẽ lấy đơn gần nhất)'
+                ]
+            ],
+            'required' => ['user_id']
         ]
     ],
 ]);

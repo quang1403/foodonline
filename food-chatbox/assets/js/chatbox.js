@@ -4,11 +4,14 @@ class FoodChatbot {
     this.chatMessages = null;
     this.chatInput = null;
     this.sessionId = this.generateSessionId();
-    this.userId = this.getUserId();
+    this.cachedUserId = undefined; // Cache user ID
     this.init();
   }
 
-  init() {
+  async init() {
+    // Fetch user ID từ session PHP ngay khi khởi tạo
+    await this.fetchUserIdFromSession();
+    
     this.createChatUI();
     this.attachEventListeners();
     this.sendWelcomeMessage();
@@ -21,8 +24,48 @@ class FoodChatbot {
   }
 
   getUserId() {
+    // Ưu tiên lấy từ hidden field
     const userIdElement = document.getElementById("chat-user-id");
-    return userIdElement ? userIdElement.value : null;
+    console.log("getUserId - Element found:", userIdElement);
+    if (userIdElement && userIdElement.value) {
+      const userId = parseInt(userIdElement.value);
+      console.log("getUserId - Parsed value from element:", userId);
+      return userId;
+    }
+    
+    // Nếu không có element, sử dụng giá trị đã cache
+    if (this.cachedUserId !== undefined) {
+      console.log("getUserId - Using cached value:", this.cachedUserId);
+      return this.cachedUserId;
+    }
+    
+    console.log("getUserId - No user ID found");
+    return null;
+  }
+  
+  async fetchUserIdFromSession() {
+    try {
+      const response = await fetch("/foodonline/food-chatbox/src/api/get_user.php");
+      const data = await response.json();
+      
+      if (data.success && data.user_id) {
+        this.cachedUserId = data.user_id;
+        console.log("Fetched user_id from session:", this.cachedUserId);
+        return this.cachedUserId;
+      }
+    } catch (error) {
+      console.error("Error fetching user_id:", error);
+    }
+    
+    this.cachedUserId = null;
+    return null;
+  }
+
+  isLoggedIn() {
+    const userId = this.getUserId(); // Lấy mỗi lần check
+    const loggedIn = userId !== null && userId > 0;
+    console.log("isLoggedIn check - userId:", userId, "logged in:", loggedIn);
+    return loggedIn;
   }
 
   createChatUI() {
@@ -113,6 +156,51 @@ class FoodChatbot {
     const message = this.chatInput.value.trim();
     if (!message) return;
 
+    // Debug: Log user state - lấy userId mỗi lần
+    const currentUserId = this.getUserId();
+    console.log("=== CHATBOX DEBUG ===");
+    console.log("User ID:", currentUserId);
+    console.log("Is Logged In:", this.isLoggedIn());
+    console.log("Message:", message);
+
+    // Kiểm tra nếu user hỏi về đơn hàng mà chưa đăng nhập
+    const orderKeywords = [
+      "đơn hàng",
+      "đơn của tôi",
+      "đơn đâu",
+      "giao chưa",
+      "trạng thái đơn",
+      "xem đơn",
+      "order",
+      "my order"
+    ];
+    
+    const isOrderQuery = orderKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword)
+    );
+    
+    console.log("Is order query:", isOrderQuery);
+    
+    if (isOrderQuery && !this.isLoggedIn()) {
+      console.log("Order query detected but user not logged in - showing login message");
+      this.addMessage(message, "user");
+      this.chatInput.value = "";
+      
+      setTimeout(() => {
+        this.addMessage(
+          "⚠️ Bạn cần đăng nhập để xem thông tin đơn hàng.\n\n" +
+          "👉 Vui lòng đăng nhập tại đây: <a href='/foodonline/login.php' style='color: #fd4d40; font-weight: bold;'>Đăng nhập</a>\n\n" +
+          "Sau khi đăng nhập, bạn có thể hỏi tôi về:\n" +
+          "• Đơn hàng của tôi\n" +
+          "• Đơn hàng giao chưa\n" +
+          "• Trạng thái đơn hàng",
+          "bot"
+        );
+      }, 500);
+      return;
+    }
+
+    console.log("Proceeding to send message to server");
     this.addMessage(message, "user");
     this.chatInput.value = "";
 
@@ -143,6 +231,9 @@ class FoodChatbot {
   }
 
   async sendMessage(message) {
+    const userId = this.getUserId(); // Lấy userId mỗi lần gửi
+    console.log("sendMessage - userId:", userId);
+    
     const response = await fetch("/foodonline/food-chatbox/src/api/chat.php", {
       method: "POST",
       headers: {
@@ -151,7 +242,7 @@ class FoodChatbot {
       body: JSON.stringify({
         message: message,
         session_id: this.sessionId,
-        user_id: this.userId,
+        user_id: userId,
       }),
     });
 
@@ -453,6 +544,6 @@ class FoodChatbot {
 }
 
 // Initialize chatbot when DOM is ready
-document.addEventListener("DOMContentLoaded", function () {
-  new FoodChatbot();
+document.addEventListener("DOMContentLoaded", async function () {
+  const chatbot = new FoodChatbot();
 });

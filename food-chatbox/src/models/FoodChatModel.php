@@ -417,4 +417,133 @@ class FoodChatModel {
         
         return $dishes;
     }
+    
+    /**
+     * Lấy danh sách đơn hàng của người dùng
+     */
+    public function getUserOrders($user_id, $limit = 10) {
+        $sql = "SELECT uo.*, 
+                r.title as restaurant_name,
+                r.address as restaurant_address
+                FROM users_orders uo
+                LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                WHERE uo.u_id = ?
+                ORDER BY uo.date DESC
+                LIMIT ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $user_id, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+        
+        return $orders;
+    }
+    
+    /**
+     * Lấy thông tin chi tiết đơn hàng theo order_id hoặc order_code
+     */
+    public function getOrderDetails($order_identifier, $user_id = null) {
+        // Kiểm tra xem identifier là order_id hay order_code
+        if (is_numeric($order_identifier)) {
+            // Là order_id
+            $sql = "SELECT uo.*, 
+                    r.title as restaurant_name,
+                    r.address as restaurant_address,
+                    r.phone as restaurant_phone
+                    FROM users_orders uo
+                    LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                    WHERE uo.o_id = ?";
+            
+            if ($user_id) {
+                $sql .= " AND uo.u_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("ii", $order_identifier, $user_id);
+            } else {
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("i", $order_identifier);
+            }
+        } else {
+            // Là order_code
+            $sql = "SELECT uo.*, 
+                    r.title as restaurant_name,
+                    r.address as restaurant_address,
+                    r.phone as restaurant_phone
+                    FROM users_orders uo
+                    LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                    WHERE uo.order_code = ?";
+            
+            if ($user_id) {
+                $sql .= " AND uo.u_id = ? LIMIT 1";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("si", $order_identifier, $user_id);
+            } else {
+                $sql .= " LIMIT 1";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("s", $order_identifier);
+            }
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        // Nếu là order_code, có thể có nhiều items
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+        
+        return $orders;
+    }
+    
+    /**
+     * Kiểm tra trạng thái đơn hàng gần nhất của người dùng
+     */
+    public function getRecentOrderStatus($user_id, $limit = 5) {
+        $sql = "SELECT uo.o_id, uo.order_code, uo.title, uo.quantity, uo.price, 
+                uo.status, uo.date, uo.address,
+                r.title as restaurant_name
+                FROM users_orders uo
+                LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                WHERE uo.u_id = ?
+                ORDER BY uo.date DESC
+                LIMIT ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $user_id, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+        
+        return $orders;
+    }
+    
+    /**
+     * Lấy thống kê đơn hàng của người dùng theo trạng thái
+     */
+    public function getUserOrderStats($user_id) {
+        $sql = "SELECT 
+                COUNT(*) as total_orders,
+                COUNT(CASE WHEN status = 'closed' THEN 1 END) as completed_orders,
+                COUNT(CASE WHEN status IN ('', 'NULL', 'preparing', 'prepared', 'in process') THEN 1 END) as pending_orders,
+                COUNT(CASE WHEN status = 'rejected' THEN 1 END) as cancelled_orders,
+                SUM(CASE WHEN status = 'closed' THEN price * quantity ELSE 0 END) as total_spent
+                FROM users_orders 
+                WHERE u_id = ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->fetch_assoc();
+    }
 }

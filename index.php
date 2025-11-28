@@ -572,6 +572,9 @@ session_start();
     <!-- Hidden field for user ID -->
     <?php if(!empty($_SESSION["user_id"])) { ?>
         <input type="hidden" id="chat-user-id" value="<?php echo $_SESSION['user_id']; ?>">
+        <!-- Debug: Session user_id = <?php echo $_SESSION['user_id']; ?> -->
+    <?php } else { ?>
+        <!-- Debug: No user_id in session -->
     <?php } ?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">

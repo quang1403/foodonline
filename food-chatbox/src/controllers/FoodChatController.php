@@ -16,6 +16,59 @@ class FoodChatController {
      */
     public function processMessage($message, $session_id, $user_id = null) {
         try {
+            // ===== XỬ LÝ ORDER QUERY TRƯỚC - BYPASS OPENAI =====
+            $message_lower = strtolower(trim($message));
+            $orderKeywords = ['đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn', 'order'];
+            $isOrderQuery = false;
+            
+            foreach ($orderKeywords as $keyword) {
+                if (strpos($message_lower, $keyword) !== false) {
+                    $isOrderQuery = true;
+                    error_log("ORDER QUERY DETECTED in processMessage: " . $keyword);
+                    break;
+                }
+            }
+            
+            // Nếu là order query - xử lý trực tiếp, không qua OpenAI
+            if ($isOrderQuery) {
+                error_log("Handling order query directly. User ID: " . ($user_id ?? 'NULL'));
+                
+                // Kiểm tra đăng nhập
+                if (!$user_id || $user_id <= 0) {
+                    error_log("User not logged in for order query");
+                    $reply = "⚠️ Bạn cần đăng nhập để xem thông tin đơn hàng.\n\n" .
+                           "👉 Vui lòng đăng nhập tại trang login.\n\n" .
+                           "Sau khi đăng nhập, bạn có thể hỏi tôi về:\n" .
+                           "• Đơn hàng của tôi\n" .
+                           "• Đơn hàng giao chưa\n" .
+                           "• Trạng thái đơn hàng";
+                } else {
+                    error_log("Fetching orders for user_id: " . $user_id);
+                    $orders = $this->model->getRecentOrderStatus($user_id, 5);
+                    error_log("Orders found: " . count($orders));
+                    
+                    if (empty($orders)) {
+                        $reply = "📦 Bạn chưa có đơn hàng nào.\n\n" .
+                               "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+                    } else {
+                        $reply = $this->formatOrdersResponse($orders);
+                    }
+                }
+                
+                // Lưu conversation và messages
+                $conversation = $this->model->getOrCreateConversation($session_id, $user_id);
+                $this->model->saveMessage($conversation['id'], 'user', $message);
+                $this->model->saveMessage($conversation['id'], 'assistant', $reply);
+                
+                return [
+                    'success' => true,
+                    'reply' => $reply,
+                    'conversation_id' => $conversation['id'],
+                    'direct_handling' => true
+                ];
+            }
+            // ===== END ORDER QUERY HANDLING =====
+            
             // Lấy hoặc tạo conversation
             $conversation = $this->model->getOrCreateConversation($session_id, $user_id);
             
@@ -85,7 +138,7 @@ class FoodChatController {
             $conversation = $this->model->getOrCreateConversation($session_id, $user_id);
             $this->model->saveMessage($conversation['id'], 'user', $message);
             
-            $reply = $this->generateReply($message, $conversation['id']);
+            $reply = $this->generateReply($message, $conversation['id'], $user_id);
             
             $this->model->saveMessage($conversation['id'], 'assistant', $reply);
             
@@ -155,6 +208,67 @@ class FoodChatController {
                     'restaurant_name' => $restaurantName
                 ];
                 
+            case 'get_user_orders':
+                $userId = $args['user_id'] ?? 0;
+                $limit = $args['limit'] ?? 10;
+                
+                if ($userId <= 0) {
+                    return [
+                        'success' => false,
+                        'error' => 'User ID không hợp lệ'
+                    ];
+                }
+                
+                $orders = $this->model->getUserOrders($userId, $limit);
+                $stats = $this->model->getUserOrderStats($userId);
+                
+                return [
+                    'success' => true,
+                    'orders' => $orders,
+                    'count' => count($orders),
+                    'stats' => $stats
+                ];
+                
+            case 'check_order_status':
+                $userId = $args['user_id'] ?? 0;
+                $orderId = $args['order_id'] ?? null;
+                
+                if ($userId <= 0) {
+                    return [
+                        'success' => false,
+                        'error' => 'User ID không hợp lệ'
+                    ];
+                }
+                
+                if ($orderId) {
+                    // Kiểm tra đơn hàng cụ thể
+                    $orders = $this->model->getOrderDetails($orderId, $userId);
+                    
+                    if (empty($orders)) {
+                        return [
+                            'success' => false,
+                            'error' => 'Không tìm thấy đơn hàng'
+                        ];
+                    }
+                    
+                    return [
+                        'success' => true,
+                        'orders' => $orders,
+                        'count' => count($orders),
+                        'type' => 'specific'
+                    ];
+                } else {
+                    // Lấy đơn hàng gần nhất
+                    $recentOrders = $this->model->getRecentOrderStatus($userId, 5);
+                    
+                    return [
+                        'success' => true,
+                        'orders' => $recentOrders,
+                        'count' => count($recentOrders),
+                        'type' => 'recent'
+                    ];
+                }
+                
             default:
                 return [
                     'success' => false,
@@ -166,8 +280,52 @@ class FoodChatController {
     /**
      * Tạo phản hồi dựa trên tin nhắn
      */
-    private function generateReply($message, $conversation_id = null) {
+    private function generateReply($message, $conversation_id = null, $user_id = null) {
         $message_lower = strtolower(trim($message));
+        
+        // DEBUG: Log đầu vào
+        error_log("=== GENERATE REPLY DEBUG ===");
+        error_log("Message: " . $message);
+        error_log("User ID received: " . ($user_id ?? 'NULL'));
+        error_log("User ID type: " . gettype($user_id));
+        
+        // Kiểm tra nếu hỏi về đơn hàng mà chưa đăng nhập
+        $orderKeywords = ['đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn'];
+        $isOrderQuery = false;
+        foreach ($orderKeywords as $keyword) {
+            if (strpos($message_lower, $keyword) !== false) {
+                $isOrderQuery = true;
+                error_log("Order keyword matched: " . $keyword);
+                break;
+            }
+        }
+        
+        error_log("Is order query: " . ($isOrderQuery ? 'TRUE' : 'FALSE'));
+        
+        // Nếu hỏi về đơn hàng mà không có user_id, yêu cầu đăng nhập
+        if ($isOrderQuery && (!$user_id || $user_id <= 0)) {
+            error_log("ORDER QUERY - No valid user_id. User ID: " . ($user_id ?? 'null'));
+            return "⚠️ Bạn cần đăng nhập để xem thông tin đơn hàng.\n\n" .
+                   "👉 Vui lòng đăng nhập để tiếp tục.\n\n" .
+                   "Sau khi đăng nhập, bạn có thể hỏi tôi về:\n" .
+                   "• Đơn hàng của tôi\n" .
+                   "• Đơn hàng giao chưa\n" .
+                   "• Trạng thái đơn hàng";
+        }
+        
+        // Nếu là order query và đã đăng nhập - gọi function thủ công
+        if ($isOrderQuery && $user_id && $user_id > 0) {
+            error_log("ORDER QUERY - Valid user_id: " . $user_id . ". Fetching orders...");
+            $orders = $this->model->getRecentOrderStatus($user_id, 5);
+            error_log("Orders found: " . count($orders));
+            
+            if (empty($orders)) {
+                return "📦 Bạn chưa có đơn hàng nào.\n\n" .
+                       "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+            }
+            
+            return $this->formatOrdersResponse($orders);
+        }
         
         // 1. Xử lý lời chào
         if (preg_match('/^(xin chào|chào|hello|hi|hey)$/i', $message_lower)) {
@@ -178,7 +336,8 @@ class FoodChatController {
                    "🏪 Tìm nhà hàng: 'nhà hàng nào ngon'\n" .
                    "💰 Hỏi giá: 'giá phở'\n" .
                    "📋 Gợi ý: 'món nào ngon'\n" .
-                   "🛒 Đặt hàng: 'đặt phở bò'\n\n" .
+                   "🛒 Đặt hàng: 'đặt phở bò'\n" .
+                   "📦 Xem đơn hàng: 'đơn hàng của tôi' (cần đăng nhập)\n\n" .
                    "Bạn muốn tìm món gì? 😊";
         }
         
@@ -501,6 +660,70 @@ class FoodChatController {
             $reply .= "\n[RESTAURANT:" . $rest['rs_id'] . "]\n";
             $reply .= "━━━━━━━━━━━━━━━━\n\n";
         }
+        
+        return $reply;
+    }
+    
+    /**
+     * Format hiển thị danh sách đơn hàng
+     */
+    private function formatOrdersResponse($orders) {
+        $reply = "📦 **ĐƠN HÀNG CỦA BẠN**\n\n";
+        
+        foreach ($orders as $index => $order) {
+            $reply .= "━━━━━━━━━━━━━━━━\n";
+            $reply .= "🆔 Đơn #" . $order['o_id'];
+            if (!empty($order['order_code'])) {
+                $reply .= " (" . $order['order_code'] . ")";
+            }
+            $reply .= "\n\n";
+            
+            $reply .= "🍜 Món: " . $order['title'] . "\n";
+            $reply .= "📊 Số lượng: " . $order['quantity'] . "\n";
+            $reply .= "💰 Giá: " . number_format($order['price'], 0, ',', '.') . " VNĐ\n";
+            
+            if (!empty($order['restaurant_name'])) {
+                $reply .= "🏪 Nhà hàng: " . $order['restaurant_name'] . "\n";
+            }
+            
+            if (!empty($order['address'])) {
+                $reply .= "📍 Địa chỉ: " . $order['address'] . "\n";
+            }
+            
+            $reply .= "📅 Ngày đặt: " . date('d/m/Y H:i', strtotime($order['date'])) . "\n\n";
+            
+            // Trạng thái
+            $status = $order['status'] ?? '';
+            $reply .= "🚦 Trạng thái: ";
+            
+            switch($status) {
+                case '':
+                case 'NULL':
+                    $reply .= "⏳ Chờ xác nhận\n";
+                    break;
+                case 'preparing':
+                    $reply .= "🍳 Đang chuẩn bị\n";
+                    break;
+                case 'prepared':
+                    $reply .= "✅ Đã chuẩn bị\n";
+                    break;
+                case 'in process':
+                    $reply .= "🛵 Đang giao\n";
+                    break;
+                case 'closed':
+                    $reply .= "✅ Đã giao\n";
+                    break;
+                case 'rejected':
+                    $reply .= "❌ Đã hủy\n";
+                    break;
+                default:
+                    $reply .= "❓ Không xác định\n";
+            }
+            
+            $reply .= "━━━━━━━━━━━━━━━━\n\n";
+        }
+        
+        $reply .= "💡 Bạn có thể hỏi chi tiết về đơn hàng cụ thể bằng cách gõ 'đơn hàng #[số]'";
         
         return $reply;
     }
