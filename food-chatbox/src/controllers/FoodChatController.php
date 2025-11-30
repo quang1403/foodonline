@@ -18,7 +18,12 @@ class FoodChatController {
         try {
             // ===== XỬ LÝ ORDER QUERY TRƯỚC - BYPASS OPENAI =====
             $message_lower = strtolower(trim($message));
-            $orderKeywords = ['đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn', 'order'];
+            $orderKeywords = [
+                'đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn', 'order',
+                'đơn', 'order của tôi', 'my order', 'đã đặt', 'đã mua',
+                'chờ xác nhận', 'đang chuẩn bị', 'đang giao', 'đã giao', 'đã hủy',
+                'kiểm tra đơn', 'tra cứu đơn'
+            ];
             $isOrderQuery = false;
             
             foreach ($orderKeywords as $keyword) {
@@ -44,14 +49,35 @@ class FoodChatController {
                            "• Trạng thái đơn hàng";
                 } else {
                     error_log("Fetching orders for user_id: " . $user_id);
-                    $orders = $this->model->getRecentOrderStatus($user_id, 5);
-                    error_log("Orders found: " . count($orders));
                     
-                    if (empty($orders)) {
-                        $reply = "📦 Bạn chưa có đơn hàng nào.\n\n" .
-                               "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+                    // Kiểm tra xem có yêu cầu lọc theo trạng thái không
+                    $status = $this->extractOrderStatus($message_lower);
+                    
+                    if ($status) {
+                        error_log("Filtering orders by status: " . $status);
+                        $orders = $this->model->getOrdersByStatus($user_id, $status, 10);
+                        $statusText = $this->getStatusText($status);
+                        
+                        if (empty($orders)) {
+                            $reply = "📦 Bạn không có đơn hàng nào " . $statusText . ".\n\n" .
+                                   "👉 Bạn có thể hỏi:\n" .
+                                   "• 'đơn hàng của tôi' - xem tất cả\n" .
+                                   "• 'đơn đang giao' - đơn đang giao hàng\n" .
+                                   "• 'đơn đã giao' - đơn hoàn thành";
+                        } else {
+                            $reply = $this->formatOrdersResponse($orders, $statusText);
+                        }
                     } else {
-                        $reply = $this->formatOrdersResponse($orders);
+                        // Hiển thị tất cả đơn hàng
+                        $orders = $this->model->getRecentOrderStatus($user_id, 5);
+                        error_log("Orders found: " . count($orders));
+                        
+                        if (empty($orders)) {
+                            $reply = "📦 Bạn chưa có đơn hàng nào.\n\n" .
+                                   "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+                        } else {
+                            $reply = $this->formatOrdersResponse($orders);
+                        }
                     }
                 }
                 
@@ -290,7 +316,11 @@ class FoodChatController {
         error_log("User ID type: " . gettype($user_id));
         
         // Kiểm tra nếu hỏi về đơn hàng mà chưa đăng nhập
-        $orderKeywords = ['đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn'];
+        $orderKeywords = [
+            'đơn hàng', 'đơn của tôi', 'đơn đâu', 'giao chưa', 'trạng thái đơn', 'xem đơn',
+            'đơn', 'order', 'my order', 'đã đặt', 'đã mua',
+            'chờ xác nhận', 'đang chuẩn bị', 'đang giao', 'đã giao', 'đã hủy'
+        ];
         $isOrderQuery = false;
         foreach ($orderKeywords as $keyword) {
             if (strpos($message_lower, $keyword) !== false) {
@@ -316,15 +346,36 @@ class FoodChatController {
         // Nếu là order query và đã đăng nhập - gọi function thủ công
         if ($isOrderQuery && $user_id && $user_id > 0) {
             error_log("ORDER QUERY - Valid user_id: " . $user_id . ". Fetching orders...");
-            $orders = $this->model->getRecentOrderStatus($user_id, 5);
-            error_log("Orders found: " . count($orders));
             
-            if (empty($orders)) {
-                return "📦 Bạn chưa có đơn hàng nào.\n\n" .
-                       "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+            // Kiểm tra xem có yêu cầu lọc theo trạng thái không
+            $status = $this->extractOrderStatus($message_lower);
+            
+            if ($status) {
+                error_log("Filtering orders by status: " . $status);
+                $orders = $this->model->getOrdersByStatus($user_id, $status, 10);
+                $statusText = $this->getStatusText($status);
+                
+                if (empty($orders)) {
+                    return "📦 Bạn không có đơn hàng nào " . $statusText . ".\n\n" .
+                           "👉 Bạn có thể hỏi:\n" .
+                           "• 'đơn hàng của tôi' - xem tất cả\n" .
+                           "• 'đơn đang giao' - đơn đang giao hàng\n" .
+                           "• 'đơn đã giao' - đơn hoàn thành";
+                }
+                
+                return $this->formatOrdersResponse($orders, $statusText);
+            } else {
+                // Hiển thị tất cả đơn hàng
+                $orders = $this->model->getRecentOrderStatus($user_id, 5);
+                error_log("Orders found: " . count($orders));
+                
+                if (empty($orders)) {
+                    return "📦 Bạn chưa có đơn hàng nào.\n\n" .
+                           "Hãy đặt món ngay để thưởng thức những món ăn ngon! 😊";
+                }
+                
+                return $this->formatOrdersResponse($orders);
             }
-            
-            return $this->formatOrdersResponse($orders);
         }
         
         // 1. Xử lý lời chào
@@ -667,8 +718,12 @@ class FoodChatController {
     /**
      * Format hiển thị danh sách đơn hàng
      */
-    private function formatOrdersResponse($orders) {
-        $reply = "📦 **ĐƠN HÀNG CỦA BẠN**\n\n";
+    private function formatOrdersResponse($orders, $statusFilter = null) {
+        if ($statusFilter) {
+            $reply = "📦 **ĐƠN HÀNG " . strtoupper($statusFilter) . "**\n\n";
+        } else {
+            $reply = "📦 **ĐƠN HÀNG CỦA BẠN**\n\n";
+        }
         
         foreach ($orders as $index => $order) {
             $reply .= "━━━━━━━━━━━━━━━━\n";
@@ -723,8 +778,74 @@ class FoodChatController {
             $reply .= "━━━━━━━━━━━━━━━━\n\n";
         }
         
-        $reply .= "💡 Bạn có thể hỏi chi tiết về đơn hàng cụ thể bằng cách gõ 'đơn hàng #[số]'";
+        $reply .= "💡 Bạn có thể lọc đơn hàng theo trạng thái:\n";
+        $reply .= "• 'đơn chờ xác nhận' - Đơn chờ duyệt\n";
+        $reply .= "• 'đơn đang chuẩn bị' - Đang nấu\n";
+        $reply .= "• 'đơn đang giao' - Shipper đang giao\n";
+        $reply .= "• 'đơn đã giao' - Hoàn thành\n";
+        $reply .= "• 'đơn đã hủy' - Đã hủy";
         
         return $reply;
+    }
+    
+    /**
+     * Trích xuất trạng thái đơn hàng từ tin nhắn
+     */
+    private function extractOrderStatus($message) {
+        $message = strtolower(trim($message));
+        
+        // Chờ xác nhận
+        if (preg_match('/(chờ xác nhận|chờ duyệt|pending)/i', $message)) {
+            return 'pending';
+        }
+        
+        // Đang chuẩn bị
+        if (preg_match('/(đang chuẩn bị|đang nấu|preparing)/i', $message)) {
+            return 'preparing';
+        }
+        
+        // Đã chuẩn bị
+        if (preg_match('/(đã chuẩn bị|đã nấu xong|prepared)/i', $message)) {
+            return 'prepared';
+        }
+        
+        // Đang giao
+        if (preg_match('/(đang giao|đang vận chuyển|shipper|delivering|in process)/i', $message)) {
+            return 'in_process';
+        }
+        
+        // Đã giao / Hoàn thành
+        if (preg_match('/(đã giao|đã nhận|hoàn thành|thành công|completed|closed)/i', $message)) {
+            return 'completed';
+        }
+        
+        // Đã hủy
+        if (preg_match('/(đã hủy|bị hủy|cancelled|rejected)/i', $message)) {
+            return 'cancelled';
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Lấy text hiển thị cho trạng thái
+     */
+    private function getStatusText($status) {
+        switch($status) {
+            case 'pending':
+                return 'CHỜ XÁC NHẬN';
+            case 'preparing':
+                return 'ĐANG CHUẨN BỊ';
+            case 'prepared':
+                return 'ĐÃ CHUẨN BỊ';
+            case 'in_process':
+                return 'ĐANG GIAO';
+            case 'completed':
+                return 'ĐÃ GIAO';
+            case 'cancelled':
+                return 'ĐÃ HỦY';
+            default:
+                return '';
+        }
     }
 }

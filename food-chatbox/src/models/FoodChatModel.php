@@ -527,6 +527,53 @@ class FoodChatModel {
     }
     
     /**
+     * Lấy đơn hàng theo trạng thái
+     */
+    public function getOrdersByStatus($user_id, $status, $limit = 10) {
+        $sql = "SELECT uo.o_id, uo.order_code, uo.title, uo.quantity, uo.price, 
+                uo.status, uo.date, uo.address,
+                r.title as restaurant_name
+                FROM users_orders uo
+                LEFT JOIN restaurant r ON uo.rs_id = r.rs_id
+                WHERE uo.u_id = ?";
+        
+        // Thêm điều kiện lọc theo trạng thái
+        if ($status === 'pending') {
+            // Đơn hàng chờ xác nhận
+            $sql .= " AND (uo.status = '' OR uo.status = 'NULL' OR uo.status IS NULL)";
+        } elseif ($status === 'preparing') {
+            // Đang chuẩn bị
+            $sql .= " AND uo.status = 'preparing'";
+        } elseif ($status === 'prepared') {
+            // Đã chuẩn bị
+            $sql .= " AND uo.status = 'prepared'";
+        } elseif ($status === 'in_process' || $status === 'delivering') {
+            // Đang giao
+            $sql .= " AND uo.status = 'in process'";
+        } elseif ($status === 'completed' || $status === 'closed') {
+            // Đã giao
+            $sql .= " AND uo.status = 'closed'";
+        } elseif ($status === 'cancelled' || $status === 'rejected') {
+            // Đã hủy
+            $sql .= " AND uo.status = 'rejected'";
+        }
+        
+        $sql .= " ORDER BY uo.date DESC LIMIT ?";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $user_id, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+        
+        return $orders;
+    }
+    
+    /**
      * Lấy thống kê đơn hàng của người dùng theo trạng thái
      */
     public function getUserOrderStats($user_id) {
